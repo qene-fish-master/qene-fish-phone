@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>青魚手機 Qene Fish Phone</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#021419">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="青魚手機">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;background:#021419;font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+body{position:fixed;inset:0;width:100%}
+button{font:inherit;cursor:pointer}
+#stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,#0b3a44,#021419 70%)}
+#phone{--bg:#f2f7f6;--card:#fff;--fg:#0b2a30;--mut:#6b8a8f;--line:#dbe7e6;--acc:#14a094;position:relative;width:410px;height:864px;flex:none;padding:10px;border-radius:60px;background:linear-gradient(145deg,#33565d,#0c1d22 45%,#2a4b52);box-shadow:0 0 0 2px #5b8189 inset,0 30px 80px #000c}
+#phone[data-theme=dark]{--bg:#071a1f;--card:#10282e;--fg:#e6f4f2;--mut:#86a6aa;--line:#1c3a40;--acc:#3ed6c4}
+.side{position:absolute;width:7px;border-radius:3px;background:linear-gradient(90deg,#78a0a7,#2a474d);transition:transform .08s;z-index:3;touch-action:none}
+.side::before{content:"";position:absolute;inset:-8px -12px}
+#pwr{right:-5px;top:210px;height:96px}
+#vup{left:-5px;top:180px;height:58px}
+#vdn{left:-5px;top:250px;height:58px}
+#pwr.pressed{transform:translateX(-3px)}
+#vup.pressed,#vdn.pressed{transform:translateX(3px)}
+#screen{position:relative;width:100%;height:100%;border-radius:50px;overflow:hidden;background:#000;isolation:isolate;transform:translateZ(0);touch-action:none;color:#fff}
+#wall{position:absolute;inset:0;z-index:0}
+#wall::after{content:"";position:absolute;inset:0;background-image:var(--scale);background-size:44px 44px;opacity:.13}
+#wall svg{position:absolute;width:340px;left:25px;bottom:150px;color:#fff;opacity:.09}
+#island{position:absolute;top:12px;left:50%;width:112px;height:32px;margin-left:-56px;background:#000;border-radius:16px;z-index:9}
+#status{position:absolute;top:0;left:0;right:0;height:54px;z-index:8;display:flex;justify-content:space-between;align-items:center;padding:6px 28px 0 30px;font-weight:600;font-size:16px;pointer-events:none}
+#screen[data-s=app] #status{color:var(--fg)}
+#status span{display:flex;align-items:center;gap:6px}
+#home{position:absolute;inset:0;z-index:1;padding:88px 22px 0;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:94px;gap:14px 4px;align-content:start}
+.ic{background:none;border:0;color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.5px;height:90px}
+.ic u{width:62px;height:62px;border-radius:17px;display:grid;place-items:center;box-shadow:0 6px 14px #0006}
+.ic svg{width:32px;height:32px}
+.ic:active u{transform:scale(.92)}
+.enter .ic{animation:pop .45s both cubic-bezier(.2,.9,.3,1.2);animation-delay:calc(var(--i)*60ms + 120ms)}
+@keyframes pop{from{opacity:0;transform:scale(.6) translateY(24px)}}
+#lock{position:absolute;inset:0;z-index:5;text-align:center;display:flex;flex-direction:column;align-items:center;padding-top:92px;will-change:transform}
+#lock .lg{width:40px;height:40px;opacity:.95}
+#ltime{font-size:94px;font-weight:200;letter-spacing:-2px;line-height:1;margin-top:10px}
+#ldate{font-size:19px;opacity:.92;margin-top:8px}
+.note{width:326px;padding:12px 16px;border-radius:18px;background:#ffffff26;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);text-align:left;font-size:14px;line-height:1.4}
+.note b{display:block;font-size:15px}
+#hint{margin-top:22px;font-size:14px;opacity:.9;animation:bob 1.8s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px);opacity:.6}}
+#ubtn{margin:14px 0 50px;padding:10px 34px;border-radius:22px;border:1px solid #fff8;background:#ffffff22;color:#fff;font-size:16px}
+.app{position:absolute;inset:0;z-index:2;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;padding-top:54px;border-radius:50px;transform:scale(.9);opacity:0;pointer-events:none;transition:transform .35s cubic-bezier(.3,.8,.3,1),opacity .28s}
+.app.open{transform:none;opacity:1;pointer-events:auto}
+.hd{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:6px 14px 10px;font-weight:700;font-size:19px}
+.hd button{justify-self:start;background:none;border:0;color:var(--acc);font-size:16px;padding:6px 4px}
+.scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding-bottom:40px}
+.grp{margin:10px 16px;background:var(--card);border-radius:16px;overflow:hidden}
+.row{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);font-size:16px}
+.row:last-child{border:0}
+.row span{flex:1}.row em{font-style:normal;color:var(--mut);font-size:15px}.row i{font-style:normal;color:var(--mut)}
+.cap{margin:6px 24px;color:var(--mut);font-size:13px;line-height:1.5}
+.tg{width:50px;height:30px;border-radius:15px;background:var(--line);position:relative;transition:.2s;flex:none}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px #0004}
+.tg.on{background:var(--acc)}.tg.on::after{left:23px}
+.seg{display:flex;gap:8px;margin:10px 16px}
+.seg button{flex:1;padding:11px 4px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);font-size:15px}
+.seg .on{border-color:var(--acc);color:var(--acc);font-weight:700}
+.walls{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 16px}
+.wt{height:96px;border-radius:12px;border:3px solid transparent;color:#fff;font-size:12px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px}
+.wt.on{border-color:var(--acc)}
+.inp{width:calc(100% - 32px);margin:10px 16px;height:42px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);padding:0 12px;font-size:16px;-webkit-user-select:text;user-select:text}
+.btn{display:block;width:calc(100% - 32px);margin:10px 16px;padding:13px;border-radius:14px;border:0;background:var(--card);color:#d6453d;font-size:16px}
+.bbar{display:flex;gap:8px;padding:2px 12px 8px}
+.bbar button{width:40px;height:40px;border-radius:12px;border:0;background:var(--card);color:var(--acc);font-size:18px}
+.bbar input{flex:1;min-width:0;height:40px;border-radius:12px;border:0;background:var(--card);color:var(--fg);padding:0 12px;font-size:16px;-webkit-user-select:text;user-select:text}
+#bform{flex:1;display:flex;min-width:0}
+#brc{flex:1;min-height:0;position:relative;background:var(--bg)}
+#brc.fr{display:flex;flex-direction:column;overflow:hidden}
+#brc iframe{flex:1;border:0;background:#fff;width:100%}
+.exbar{padding:7px 12px;font-size:12px;background:var(--card);color:var(--mut);line-height:1.4}
+.exbar a{color:var(--acc);font-weight:700}
+.tb{display:flex;justify-content:space-around;padding:6px 0 32px;border-top:1px solid var(--line);background:var(--card)}
+.tb button{background:none;border:0;color:var(--fg);font-size:24px;width:52px;height:40px}
+.tb button:disabled{opacity:.28}
+#btabs{font-size:14px;font-weight:700}#btabs b{display:inline-block;width:24px;height:24px;line-height:21px;border:2px solid var(--fg);border-radius:6px}
+.page{padding:18px 20px;font-size:var(--fs,16px);line-height:1.65;color:var(--fg)}
+.page h2{margin-bottom:8px}.page p{margin:8px 0}.mut,.page small{color:var(--mut)}
+.page a{color:var(--acc);font-weight:600;text-decoration:none}
+.bh{text-align:center;padding-top:16px}.bh svg{width:78px;height:78px;color:var(--acc)}
+.sbox{display:flex;gap:8px;margin:16px 0}
+.sbox input{flex:1;min-width:0;height:44px;border-radius:22px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);padding:0 16px;font-size:16px;-webkit-user-select:text;user-select:text}
+.sbox button{border:0;border-radius:22px;background:var(--acc);color:#fff;padding:0 18px;font-size:15px}
+.quick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.quick a{padding:8px 14px;border-radius:18px;background:var(--card)}
+.bgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+.bgrid a{background:var(--card);border-radius:14px;padding:14px 6px;font-size:13px;text-align:center;word-break:break-all}
+.bmr{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.bmr a{flex:1;min-width:0;display:block;word-break:break-all}.bmr small{display:block;font-weight:400}
+.bmr button{background:none;border:0;color:var(--mut);font-size:18px}
+#tabs{position:absolute;inset:54px 0 0;z-index:4;background:var(--bg);display:none;flex-direction:column;border-radius:0 0 50px 50px}
+#tabs.show{display:flex}
+#tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px;overflow-y:auto;flex:1;touch-action:pan-y}
+.tc{position:relative;background:var(--card);border-radius:14px;padding:14px 10px;min-height:110px;border:2px solid transparent;display:flex;flex-direction:column;gap:4px;word-break:break-all;overflow:hidden}
+.tc.on{border-color:var(--acc)}.tc small{color:var(--mut);font-size:11px}
+.tc button{position:absolute;top:4px;right:4px;background:none;border:0;color:var(--mut);font-size:18px;width:32px;height:32px}
+#tfoot{padding:8px 16px 36px;display:flex;gap:10px}
+#tfoot button{flex:1;padding:13px;border-radius:14px;border:0;background:var(--acc);color:#fff;font-size:16px}
+#tfoot button+button{background:var(--card);color:var(--fg)}
+#ntx{flex:1;margin:4px 16px 44px;border:0;border-radius:16px;background:var(--card);color:var(--fg);padding:16px;font-size:17px;line-height:1.6;resize:none;outline:none;-webkit-user-select:text;user-select:text}
+#bar{position:absolute;left:0;right:0;bottom:0;height:30px;z-index:9;touch-action:none}
+#bar::after{content:"";position:absolute;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:#fff;opacity:.85}
+#screen[data-s=app] #bar::after{background:var(--fg)}
+#hud{position:absolute;top:60px;left:50%;width:210px;margin-left:-105px;z-index:10;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:20px;background:#0c1d22e6;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;transform:translateY(-14px) scale(.95);transition:.22s;pointer-events:none}
+#hud.show{opacity:1;transform:none}
+#hud div.t{flex:1;height:8px;border-radius:4px;background:#ffffff33;overflow:hidden}
+#hf{height:100%;background:#3ed6c4;border-radius:4px;transition:width .12s}
+#hv{width:44px;text-align:right;font-size:14px;font-weight:600}
+#toast{position:absolute;bottom:62px;left:50%;transform:translate(-50%,10px);z-index:10;background:#0c1d22e6;color:#fff;padding:9px 16px;border-radius:18px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#menu{position:absolute;inset:0;z-index:11;background:#000a;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center}
+#menu.show{display:flex}
+#dlg{position:absolute;inset:0;z-index:12;background:#000a;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center}
+#dlg.show{display:flex}
+.mcard{width:290px;background:#10282e;border-radius:26px;padding:22px 18px;color:#fff;text-align:center}
+.mcard h3{margin-bottom:14px}
+.mcard button{display:block;width:100%;padding:14px;margin-top:10px;border-radius:14px;border:0;background:#1d4a52;color:#fff;font-size:17px}
+.mcard button[data-pw=off]{background:#c8423b}
+.mcard .gh{background:none;color:#9fc5c9}
+#off,#boot{position:absolute;inset:0;background:#000;display:none;z-index:12}
+#boot{z-index:13;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff}
+#off.show,#boot.show{display:flex}
+#boot svg{width:84px;height:84px;color:#3ed6c4;animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{opacity:.45}}
+#boot .nm{font-size:22px;font-weight:300;letter-spacing:4px}
+#boot small{opacity:.6;letter-spacing:1px}
+#pgb{width:150px;height:4px;border-radius:2px;background:#ffffff26;overflow:hidden;margin-top:16px}
+#pgb i{display:block;height:100%;width:0;background:#3ed6c4}
+#pgb.run i{animation:ld 2s linear forwards}
+@keyframes ld{to{width:100%}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+#screen[data-s=lock] #home{visibility:hidden}
+#scar{display:none;font-size:13px;font-weight:600;margin-left:4px}
+#screen[data-s=lock] #scar{display:inline}
+#screen[data-s=lock] #stime{display:none}
+#screen[data-s=lock] #scar{margin-left:0}
+#lnotes{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+input[type=range]{width:100%;accent-color:var(--acc);touch-action:none;margin-top:8px}
+.sl{margin:10px 16px;padding:12px 16px;background:var(--card);border-radius:16px;font-size:16px}
+.abig .row,.abig .page,.abig .cap,.abig .sl{font-size:19px}
+.abold .row,.abold .page,.abold .ic,.abold .hd,.abold .sl{font-weight:700}
+.acon #screen{filter:contrast(1.2)}
+.anomo *{animation:none!important;transition:none!important}
+.nolabel .ic{font-size:0;gap:0}
+.bigic .ic u{width:72px;height:72px}
+.nobar #bar::after{display:none}
+#wall.noscale::after,#wall.noscale svg{display:none}
+#dim{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:14}
+#ccz{position:absolute;top:0;right:0;width:45%;height:36px;z-index:9;touch-action:none}
+#cc{position:absolute;inset:0;z-index:11;background:#000b;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;flex-direction:column;justify-content:center;padding:60px 22px 30px}
+#cc.show{display:flex}
+.cct{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{border-radius:22px;background:#ffffff26;color:#fff;border:0;padding:12px 8px;font-size:16px;height:84px}
+.tile.on{background:#3ed6c4;color:#06242b;font-weight:700}
+.ccs{background:#ffffff26;border-radius:22px;padding:14px 16px;margin-top:12px;color:#fff;font-size:15px}
+#banner{position:absolute;top:58px;left:12px;right:12px;z-index:10;padding:12px 16px;border-radius:22px;background:#0c1d22f2;color:#fff;font-size:14px;line-height:1.4;transform:translateY(-140px);transition:.35s;pointer-events:none}
+#banner.show{transform:none}#banner b{display:block}
+#cam .hd span{color:#fff}
+#cv{flex:1;position:relative;background:#111;overflow:hidden;transition:opacity .12s}
+#cv video{width:100%;height:100%;object-fit:cover}
+#cv.mir video{transform:scaleX(-1)}
+#grid{position:absolute;inset:0;display:none;pointer-events:none;background-image:linear-gradient(#fff5 1px,transparent 1px),linear-gradient(90deg,#fff5 1px,transparent 1px);background-size:33.333% 33.333%}
+.gridon #grid{display:block}
+#cmsg{position:absolute;inset:0;display:grid;place-items:center;padding:30px;text-align:center;color:#ccc;font-size:14px;pointer-events:none}
+#cfoot{display:flex;justify-content:space-around;align-items:center;padding:14px 0 44px;background:#000}
+#shut{width:68px;height:68px;border-radius:50%;border:4px solid #fff;background:#ffffff40;box-shadow:inset 0 0 0 4px #000}
+#cflip{width:48px;height:48px;border-radius:50%;border:0;background:#ffffff26;color:#fff;font-size:22px}
+#cthumb{width:48px;height:48px;border-radius:10px;object-fit:cover;background:#222;display:none}
+.su{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff}.su svg{width:26px;height:26px}
+.get{border:0;border-radius:16px;background:var(--acc);color:#fff;padding:7px 16px;font-size:14px}.get:disabled{opacity:.5}
+.row small{color:var(--mut)}
+#cdsp{font-size:56px;font-weight:300;text-align:right;padding:20px 8px;overflow:hidden;white-space:nowrap}
+.ckeys{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.ckeys button{height:64px;border-radius:32px;border:0;background:var(--card);color:var(--fg);font-size:24px}
+.ckeys .op{background:var(--acc);color:#fff}.ckeys .z{grid-column:span 2}
+.big{font-size:56px;font-weight:200;text-align:center;padding:24px 0;font-variant-numeric:tabular-nums}
+#tank{position:relative;height:260px;border-radius:20px;overflow:hidden;background:linear-gradient(#1c8c9a,#06424e);margin-bottom:8px;transition:filter .2s}
+#tank svg{position:absolute;left:0;width:56px;height:56px;color:#3ed6c4;animation:swim linear infinite alternate}
+@keyframes swim{from{transform:translateX(0)}to{transform:translateX(270px)}}
+#call{position:absolute;inset:0;z-index:5;background:#06242b;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-radius:50px}
+#call.show{display:flex}
+.cbtn{width:68px;height:68px;border-radius:50%;border:0;background:#d6453d;color:#fff;font-size:26px;margin-top:50px}
+.kp{display:grid;grid-template-columns:repeat(3,76px);gap:14px;justify-content:center;margin-top:6px}
+.kp button{width:76px;height:76px;border-radius:50%;border:0;background:var(--card);color:var(--fg);font-size:28px}
+#pnum{font-size:30px;text-align:center;min-height:44px;padding:16px;letter-spacing:1px}
+.callg{background:#2fbf71!important;color:#fff!important}
+.bub{max-width:75%;width:fit-content;padding:9px 14px;border-radius:18px;margin:6px 14px;line-height:1.4;word-break:break-word;font-size:16px}
+.bub.me{margin-left:auto;background:var(--acc);color:#fff}
+.bub small{display:block;opacity:.75;font-size:11px;color:inherit}
+#mform{display:none;gap:8px;padding:8px 12px 34px;border-top:1px solid var(--line);background:var(--card)}
+#mform.show{display:flex}
+#mform input{flex:1;min-width:0;height:42px;border-radius:21px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:0 14px;font-size:16px;-webkit-user-select:text;user-select:text}
+#mform button{border:0;border-radius:21px;background:var(--acc);color:#fff;padding:0 16px;font-size:15px}
+#pass{position:absolute;inset:0;z-index:7;display:none;flex-direction:column;align-items:center;padding-top:96px;background:#021419ee;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#fff}
+#pass.show{display:flex}
+#ptit{font-size:22px}
+#pmsg{min-height:22px;margin-top:8px;font-size:14px;color:#ffb4a8;text-align:center;padding:0 24px}
+#pdots{display:flex;gap:16px;margin:24px 0 30px}
+#pdots i{width:14px;height:14px;border-radius:50%;border:2px solid #fff}
+#pdots i.on{background:#fff}
+#pdots.shake{animation:shk .4s}
+@keyframes shk{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+#pkeys{display:grid;grid-template-columns:repeat(3,76px);gap:16px}
+#pkeys button{width:76px;height:76px;border-radius:50%;border:0;background:#ffffff22;color:#fff;font-size:30px}
+#pkeys .e{visibility:hidden}
+.pf{display:flex;width:100%;justify-content:space-between;padding:22px 52px}
+.pf button{background:none;border:0;color:#fff;font-size:16px}
+#preset{display:none}
+
+/* ---------- 橫向模式 ---------- */
+#phone.land{width:864px;height:410px}
+.land #pwr{right:auto;top:-5px;left:210px;width:96px;height:7px}
+.land #vup,.land #vdn{left:auto;top:auto;bottom:-5px;width:58px;height:7px}
+.land #vup{left:180px}.land #vdn{left:250px}
+.land #pwr.pressed{transform:translateY(3px)}
+.land #vup.pressed,.land #vdn.pressed{transform:translateY(-3px)}
+.land #island{top:50%;left:12px;margin:-56px 0 0;width:32px;height:112px}
+.land #status{height:34px;padding:2px 28px 0 64px}
+.land #wall svg{left:calc(50% - 170px);bottom:20px}
+.land #home{grid-template-columns:repeat(8,1fr);padding:46px 70px 0 70px}
+.land .app{padding-top:34px;padding-left:50px;padding-right:24px}
+.land .scroll{padding-bottom:16px}
+.land .tb{padding-bottom:16px}
+.land #mform{padding-bottom:12px}
+.land #ntx{margin-bottom:16px}
+.land #tabs{inset:34px 0 0;padding-left:50px}
+.land #tgrid{grid-template-columns:repeat(4,1fr)}
+.land #tfoot{padding-bottom:14px}
+.land #lock{padding-top:34px}
+.land #lock .lg{display:none}
+.land #ltime{font-size:76px;margin-top:0}
+.land #ldate{margin-top:2px}
+.land #hint{margin-top:10px}
+.land #ubtn{margin:8px 0 26px}
+.land #lnotes .note:nth-child(n+2){display:none}
+.land #pass.show{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto auto 1fr;padding:34px 70px 0 70px;justify-items:center;align-content:center}
+.land #ptit,.land #pmsg,.land #pdots{grid-column:1}
+.land #pdots{margin:12px 0}
+.land #pkeys{grid-column:2;grid-row:1/5;grid-template-columns:repeat(3,56px);gap:10px;align-self:center}
+.land #pkeys button{width:56px;height:56px;font-size:24px}
+.land .pf{grid-column:1;width:100%;padding:6px 20px;justify-content:center;gap:40px}
+.land #hud{top:40px}
+.land #banner{top:40px}
+.land .kp{grid-template-columns:repeat(3,56px);gap:10px}
+.land .kp button{width:56px;height:56px;font-size:22px}
+.land #pnum{padding:4px;min-height:34px;font-size:24px}
+.land .cbtn{margin-top:16px}
+.land .ckeys{gap:8px}.land .ckeys button{height:42px;font-size:20px}
+.land #cdsp{font-size:36px;padding:4px 8px}
+.land .big{font-size:40px;padding:8px 0}
+.land #tank{height:150px}
+.land #cc{padding:34px 24px 12px 56px}
+.land .cct{grid-template-columns:repeat(4,1fr);gap:10px}
+.land .tile{height:54px;font-size:14px;padding:6px}
+.land .ccs{padding:8px 16px;margin-top:8px}
+.land #cc>button.tile{height:42px!important;margin-top:8px!important}
+#phone{--kbg:#d8ecea;--kk:#fff}
+#phone[data-theme=dark]{--kbg:#0d2429;--kk:#1d3b42}
+#kb{position:absolute;left:0;right:0;bottom:0;z-index:6;display:none;flex-direction:column;gap:6px;padding:4px 5px 30px;background:var(--kbg);border-top:1px solid var(--line);color:var(--fg)}
+#kb .kh{display:flex;justify-content:space-between;align-items:center;height:26px;padding:0 6px;font-size:12px;font-weight:700;color:var(--mut)}
+#kb .kh svg{vertical-align:-3px}
+#kb .kh button{height:24px;padding:0 8px;border:0;border-radius:12px;background:none;box-shadow:none;color:var(--acc);font-size:12px;font-weight:700}
+#kb .kk{display:flex;flex-direction:column;gap:7px}
+#kb .kr{display:flex;gap:5px}
+#kb .kr.ind{padding:0 15px}
+#kb .kr button{flex:1;min-width:0;height:44px;padding:0;border:0;border-radius:12px;background:var(--kk);color:var(--fg);font-size:19px;box-shadow:0 2px 0 var(--line)}
+#kb .kr .w{flex:1.5}#kb .kr .sp{flex:4.6}
+#kb .kr .f{background:var(--line)}
+#kb .kr .a{background:var(--acc);color:#fff}
+#kb .kr .pr{transform:translateY(2px);box-shadow:none;filter:brightness(.92)}
+#screen.kbon .app{padding-bottom:var(--kbh,0px)}
+#screen.kbon .tb{display:none}
+#screen.kbon #mform{padding-bottom:8px}
+#screen.kbon #ntx{margin-bottom:8px}
+.land #kb{padding:3px 24px 30px 50px;gap:3px}
+.land #kb .kh{height:20px}.land #kb .kk{gap:4px}
+.land #kb .kr button{height:30px;font-size:16px}
+.pl{justify-self:end;color:var(--acc);font-size:16px;padding:6px 4px;font-weight:700}
+.pgr{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:3px;padding:0 3px}
+.pt{position:relative;aspect-ratio:1;border:0;padding:0;background:var(--line);overflow:hidden}
+.pt img,.pt video{width:100%;height:100%;object-fit:cover;pointer-events:none;display:block}
+.pt b{position:absolute;left:6px;bottom:4px;color:#fff;font-size:12px;text-shadow:0 1px 3px #000}
+#pv{position:absolute;inset:0;z-index:3;display:none;flex-direction:column;padding-top:54px;background:var(--bg);color:var(--fg)}
+#pn{display:flex;justify-content:space-between;align-items:center;padding:6px 14px;font-size:15px}
+#pn button{background:none;border:0;color:var(--acc);font-size:16px;padding:6px 8px}
+#pn button:disabled{opacity:.3}
+#pm{flex:1;min-height:0;min-width:0;display:flex;align-items:center;justify-content:center;padding:8px 8px 36px}
+#pm img,#pm video{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px}
+.land #pv{padding-top:34px;padding-left:50px}.land #pm{padding-bottom:16px}
+#stage{perspective:2600px}
+#phone.ease{transition:transform .6s cubic-bezier(.3,.8,.3,1)}
+#phone.demo{transform-style:preserve-3d}
+#phone.demo #screen{transform:translateZ(20px);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+#slab{position:absolute;inset:0;display:none;transform-style:preserve-3d}.demo #slab{display:block}
+#slab div{position:absolute;inset:0;border-radius:60px;background:linear-gradient(145deg,#33565d,#0c1d22 45%,#2a4b52);box-shadow:0 0 0 2px #5b8189 inset}
+#back{position:absolute;inset:10px;border-radius:50px;display:none;transform-style:preserve-3d;background:linear-gradient(160deg,#21737d,#0b2f37 58%,#081d23);transform:rotateY(180deg) translateZ(20px);backface-visibility:hidden;-webkit-backface-visibility:hidden;color:#fff;text-align:center}
+.demo #back{display:block}
+#back .lg{position:absolute;left:50%;top:52%;width:92px;height:92px;margin:-46px 0 0 -46px;opacity:.28}
+#back .nm{position:absolute;left:0;right:0;bottom:70px;font-size:22px;font-weight:300;letter-spacing:6px}
+#back small{position:absolute;left:0;right:0;bottom:46px;font-size:12px;opacity:.55;letter-spacing:2px}
+.bcam{position:absolute;top:22px;left:22px;width:142px;height:142px;border-radius:38px;background:#0c242a;box-shadow:inset 0 0 0 2px #3f6770,0 6px 16px #0009;transform:translateZ(5px);transform-style:preserve-3d}
+.bcam i{position:absolute;width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 35% 32%,#7fb4bd 0,#17333a 28%,#000 68%);box-shadow:0 0 0 4px #1b3d45,0 0 0 6px #4b7780;transform:translateZ(4px)}
+.bcam i:nth-child(1){left:11px;top:11px}.bcam i:nth-child(2){left:75px;top:11px}.bcam i:nth-child(3){left:43px;top:75px}
+.bcam b{position:absolute;right:14px;bottom:16px;width:14px;height:14px;border-radius:50%;background:#f6f1d4;box-shadow:0 0 8px #fff8}
+.demo #hint,.demo #ubtn{display:none}
+#demoov{position:absolute;inset:0;z-index:20;display:none;touch-action:none;cursor:grab}
+#demobar{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:21;display:none;gap:10px}
+#demobar button{padding:10px 18px;border-radius:20px;border:1px solid #fff5;background:#0c1d22cc;color:#fff;font-size:15px}
+#demohint{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;color:#9fc5c9;font-size:13px;z-index:21;display:none;pointer-events:none}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><symbol id="fish" viewBox="0 0 32 32"><path d="M2.5 16C7.5 7 18 6 24 12l6-5v18l-6-5C18 26 7.5 25 2.5 16z" fill="currentColor"/><circle cx="9.5" cy="14" r="1.6" fill="#06242b"/></symbol></svg>
+<div id="stage">
+<div id="phone" data-theme="light">
+ <div class="side" id="pwr"></div><div class="side" id="vup"></div><div class="side" id="vdn"></div>
+ <div id="back"><div class="bcam"><i></i><i></i><i></i><b></b></div><svg class="lg"><use href="#fish"/></svg><div class="nm">青魚手機</div><small>QENE FISH PHONE</small></div>
+  <div id="screen" data-s="lock">
+  <div id="wall"><svg><use href="#fish"/></svg></div>
+  <div id="island"></div>
+  <div id="status"><span style="gap:5px"><b id="stime" style="font-size:15px">--:--</b><b id="sf" style="display:none;font-size:13px">☾</b><b id="scar"></b></span>
+   <span style="gap:5px"><svg id="sb" width="12" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>
+   <svg id="ssig" width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+   <svg id="sw" width="17" height="13" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M2 6.5a14 14 0 0 1 20 0M6 11a8 8 0 0 1 12 0"/><circle cx="12" cy="15.5" r="1.4" fill="currentColor"/></svg>
+   <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><rect x="24" y="4" width="1.6" height="4" rx=".8" fill="currentColor" opacity=".5"/></svg></span></div>
+  <div id="home"></div>
+
+  <div class="app" id="br">
+   <div class="bbar"><button id="bhome" title="首頁">🐟</button>
+    <form id="bform"><input id="burl" type="text" inputmode="url" enterkeyhint="go" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="搜尋或輸入網址"></form></div>
+   <div id="brc" class="scroll"></div>
+   <div id="tabs"><div class="hd"><i></i><span>分頁</span><i></i></div><div id="tgrid"></div><div id="tfoot"><button id="tnew">＋ 新分頁</button><button id="tdone">完成</button></div></div>
+   <div class="tb"><button id="bback">‹</button><button id="bfwd">›</button><button id="breload">↻</button><button id="bstar">☆</button><button id="btabs"></button><button data-home>⌂</button></div>
+  </div>
+
+  <div class="app" id="set"><div class="hd"><button id="sback">‹ 主畫面</button><span id="stitle">設定</span><i></i></div><div class="scroll" id="sc"></div></div>
+
+  <div class="app" id="nt"><div class="hd"><button data-home>‹ 主畫面</button><span>青魚筆記</span><i></i></div><textarea id="ntx" placeholder="寫點什麼…"></textarea></div>
+
+  <div class="app" id="cam"><div class="hd"><button data-home>‹ 主畫面</button><span>相機</span><i></i></div><div style="flex:1;display:grid;place-items:center;text-align:center;padding:30px 40px 80px"><div><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="opacity:.6"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/><path d="M3 3l18 18"/></svg><h3 style="margin:14px 0 6px">沒有權限開啟相機</h3><p class="cap" style="margin:0">青魚手機尚未取得相機權限。</p></div></div></div>
+  <div class="app" id="pic"><div class="hd"><button data-home>‹ 主畫面</button><span>青魚照片</span><label class="pl">＋ 加入<input id="pf" type="file" accept="image/*,video/*" multiple hidden></label></div><div class="scroll" id="pg"></div><div id="pv"></div></div>
+  <div class="app" id="st"><div class="hd"><button data-home>‹ 主畫面</button><span>Qene App Store</span><i></i></div><div class="scroll"><input class="inp" id="sq" placeholder="搜尋 App" enterkeyhint="search"><div class="grp" id="slist"></div><p class="cap">所有 App 皆為青魚自製示範，不會連到真實 App Store。</p></div></div>
+  <div class="app" id="mini"><div class="hd"><button data-home>‹ 主畫面</button><span id="mtitle"></span><i></i></div><div class="scroll" id="mbody" style="padding:8px 16px 40px"></div></div>
+  <div class="app" id="ph"><div class="hd"><button data-home>‹ 主畫面</button><span>電話</span><i></i></div><div class="seg" id="phtabs"><button data-pt="rec">最近</button><button data-pt="con">聯絡人</button><button data-pt="pad">鍵盤</button></div><div class="scroll" id="phb"></div><div id="call"></div></div>
+  <div class="app" id="ms"><div class="hd"><button id="mback">‹ 主畫面</button><span id="mst">訊息</span><button id="mnew" style="justify-self:end">＋</button></div><div class="scroll" id="mb"></div><form id="mform"><input id="mtx" placeholder="輸入訊息" autocomplete="off" enterkeyhint="send"><button>傳送</button></form></div>
+  <div id="lock">
+   <svg class="lg"><use href="#fish"/></svg>
+   <div id="ltime">--:--</div><div id="ldate"></div>
+   <div id="lnotes"></div>
+   <div id="hint">︿ 向上滑動以解鎖</div>
+   <button id="ubtn">解鎖</button>
+  </div>
+  <div id="pass"><div id="ptit"></div><div id="pmsg"></div><div id="pdots"></div><div id="pkeys"><button data-d="1">1</button><button data-d="2">2</button><button data-d="3">3</button><button data-d="4">4</button><button data-d="5">5</button><button data-d="6">6</button><button data-d="7">7</button><button data-d="8">8</button><button data-d="9">9</button><button class="e"></button><button data-d="0">0</button><button data-del="1" style="font-size:22px">⌫</button></div><div class="pf"><button id="pcancel">取消</button><button id="preset">重設密碼</button></div></div><div id="bar"></div><div id="ccz"></div><div id="dim"></div>
+  <div id="kb"><div class="kh"><span><svg width="16" height="16"><use href="#fish"/></svg> 青魚鍵盤</span><span><button data-kk="sys">🌐 系統鍵盤</button><button data-kk="hide">⌄</button></span></div><div class="kk"></div></div><div id="hud"><span id="hi">♪</span><div class="t"><div id="hf"></div></div><span id="hv"></span></div>
+  <div id="toast"></div>
+  <div id="menu"><div class="mcard"><h3>電源選單</h3><button data-pw="off">關機</button><button data-pw="reboot">重新啟動</button><button data-pw="cancel" class="gh">取消</button></div></div>
+  <div id="dlg"><div class="mcard"><h3 id="dlgt"></h3><p id="dlgm" style="font-size:14px;line-height:1.5;opacity:.85"></p><button data-dk="ok" data-pw="off" id="dlgok"></button><button data-dk="no" class="gh">取消</button></div></div><div id="cc"></div><div id="banner"></div><div id="off"></div>
+  <div id="boot"><svg><use href="#fish"/></svg><div class="nm">青魚手機</div><small id="bt">QENE FISH PHONE</small><div id="pgb"><i></i></div></div>
+ </div>
+</div>
+<div id="demoov"></div><div id="demobar"><button data-d3="f">正面</button><button data-d3="b">背面</button><button data-d3="x">結束展示</button></div><div id="demohint">拖曳旋轉手機</div>
+</div>
+<script>
+(()=>{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const KEY='qene.v1';
+const D={kb:'fish',pass:'1234',passOn:false,cell:true,carrier:'kiwe',land:false,msgs:{},calls:[],ver:'1.0',autoUpd:true,custom:'',useCustom:false,scales:true,shot:'',camFront:0,grid:false,mirror:true,shutSnd:true,bright:1,ccOn:true,ccApp:true,notif:true,notifLock:true,banner:true,nsound:true,click:true,lockSnd:true,tone:660,focus:'',usage:{},limit:0,h24:true,abig:false,abold:false,acon:false,anomo:false,labels:true,icsz:0,addHome:true,inst:[],gSwipe:true,gBar:true,fed:0,dark:false,wifi:true,bt:true,vol:50,wall:0,home:'qene:home',bmHome:true,fs:16,net:'QeneFish-5G',btDev:true,note:'',bm:[{t:'青魚說明',u:'qene:about'},{t:'維基百科',u:'https://zh.wikipedia.org'}]};
+let S=JSON.parse(JSON.stringify(D));
+try{const sv=JSON.parse(localStorage.getItem(KEY)||'{}');Object.assign(S,sv);if(!('cell' in sv)&&sv.pass==='1234')S.passOn=false}catch(e){}
+const CARR={kiwe:'kiwe通訊',north:'北魚通訊'};
+const carName=()=>CARR[S.carrier]||CARR.kiwe;
+const online=()=>!!(S.wifi||S.cell);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const R={on:true,awake:true,stage:'lock',busy:false,sc:1,cur:null,t0:0,dl:{},stream:null,nl:[{t:'歡迎使用青魚手機',b:'這是網頁模擬器，不是真正的手機系統。'}]};
+const phone=$('#phone'),scr=$('#screen'),lock=$('#lock'),home=$('#home');
+const WALLS=[{n:'深海',c:'linear-gradient(170deg,#0e5a66 0%,#06242b 58%,#021419)'},{n:'潮光',c:'linear-gradient(160deg,#25b8a8,#0d6b78 52%,#073a47)'},{n:'夕鱗',c:'linear-gradient(165deg,#e8794f,#a63f6b 52%,#2f2459)'},{n:'霧灣',c:'linear-gradient(170deg,#4f9fa6,#2f7584 55%,#1b4656)'}];
+const scaleSvg="<svg xmlns='http://www.w3.org/2000/svg' width='44' height='44'><g fill='none' stroke='white' stroke-width='1.5'><circle cx='0' cy='0' r='22'/><circle cx='44' cy='0' r='22'/><circle cx='22' cy='22' r='22'/><circle cx='0' cy='44' r='22'/><circle cx='44' cy='44' r='22'/></g></svg>";
+$('#wall').style.setProperty('--scale','url("data:image/svg+xml,'+encodeURIComponent(scaleSvg)+'")');
+
+/* ---------- 版面縮放 ---------- */
+function fit(){const vv=window.visualViewport,w=vv?vv.width:innerWidth,h=vv?vv.height:innerHeight;const LW=S.land?884:428,LH=S.land?428:884;R.sc=Math.min(w/LW,h/LH,1.2);phone.style.transform=R.demo?'scale('+R.sc*.85+') rotateX('+V.x+'deg) rotateY('+V.y+'deg)':'scale('+R.sc+')'}
+addEventListener('resize',fit);if(window.visualViewport)visualViewport.addEventListener('resize',fit);fit();
+document.addEventListener('touchmove',e=>{if(!e.target.closest('.scroll,textarea,#tgrid,#cc,#pv'))e.preventDefault()},{passive:false});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('gesturestart',e=>e.preventDefault());
+
+/* ---------- 狀態套用 ---------- */
+function applyAll(){phone.classList.toggle('land',!!S.land);fit();phone.dataset.theme=S.dark?'dark':'light';const w=$('#wall');w.style.background=S.useCustom&&S.custom?'center/cover url('+S.custom+')':WALLS[S.wall].c;w.classList.toggle('noscale',!S.scales);$('#sw').style.display=S.wifi?'':'none';$('#ssig').style.display=S.cell?'':'none';$('#scar').textContent=S.cell?carName():'';$('#sb').style.display=S.bt?'':'none';$('#sf').style.display=S.focus?'':'none';phone.style.setProperty('--fs',S.fs+'px');['abig','abold','acon','anomo'].forEach(k=>phone.classList.toggle(k,!!S[k]));phone.classList.toggle('nolabel',!S.labels);phone.classList.toggle('bigic',S.icsz===1);phone.classList.toggle('nobar',!S.gBar);$('#dim').style.opacity=(1-S.bright)*.75;$('#hint').style.display=S.gSwipe?'':'none'}
+function tick(){const d=new Date(),p=n=>String(n).padStart(2,'0'),t=d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hourCycle:S.h24?'h23':'h12'});$('#stime').textContent=t;$('#ltime').textContent=t;$('#ldate').textContent=d.toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'long'});wcR()}
+setInterval(tick,1000);
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1500)}
+
+/* ---------- 聲音與音量 ---------- */
+let ac;function beep(f){if(S.vol===0)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f||S.tone;g.gain.value=S.vol/100*0.2;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.08)}catch(e){}}
+let ht;function hud(){$('#hv').textContent=S.vol+'%';$('#hf').style.width=S.vol+'%';$('#hi').textContent=S.vol?'♪':'✕';const h=$('#hud');h.classList.add('show');clearTimeout(ht);ht=setTimeout(()=>h.classList.remove('show'),1600)}
+function vol(d){if(!R.on||R.busy)return;S.vol=Math.max(0,Math.min(100,S.vol+d));save();beep(400+S.vol*5);if(R.awake)hud()}
+function key(el,fn){let on=false;el.addEventListener('pointerdown',e=>{e.preventDefault();on=true;try{el.setPointerCapture(e.pointerId)}catch(_){}el.classList.add('pressed');fn()});['pointerup','pointercancel'].forEach(t=>el.addEventListener(t,()=>{on=false;el.classList.remove('pressed')}))}
+key($('#vup'),()=>vol(10));key($('#vdn'),()=>vol(-10));
+
+/* ---------- 電源 ---------- */
+const bootEl=$('#boot'),offEl=$('#off'),menu=$('#menu');
+function showBoot(txt,prog){bootEl.classList.add('show');$('#bt').textContent=txt||'QENE FISH PHONE';const p=$('#pgb');p.classList.remove('run');p.style.visibility=prog?'visible':'hidden';if(prog){void p.offsetWidth;p.classList.add('run')}}
+function resetToLock(){flush();camStop();stopCall();passHide();lrender();$('#cc').classList.remove('show');$('#tabs').classList.remove('show');$$('.app').forEach(a=>a.classList.remove('open'));R.stage='lock';scr.dataset.s='lock';lock.style.transition='none';lock.style.transform='';lock.style.opacity=1;lock.style.pointerEvents='';home.classList.remove('enter');menu.classList.remove('show');$('#dlg').classList.remove('show');dlgCb=null;tick()}
+function sleep(){flush();camStop();stopCall();R.awake=false;offEl.classList.add('show');menu.classList.remove('show')}
+function wake(){R.awake=true;resetToLock();offEl.classList.remove('show')}
+async function powerOff(){flush();camStop();R.busy=true;menu.classList.remove('show');showBoot('正在關機…',false);await wait(1400);R.on=false;R.awake=false;offEl.classList.add('show');bootEl.classList.remove('show');R.busy=false}
+async function reboot(){R.busy=true;menu.classList.remove('show');showBoot('正在重新啟動…',false);await wait(1400);showBoot('',true);await wait(2000);finish()}
+async function powerOn(){R.busy=true;showBoot('',true);await wait(2000);finish()}
+function finish(){setTimeout(autoChk,1500);R.on=true;R.awake=true;resetToLock();offEl.classList.remove('show');bootEl.classList.remove('show');R.busy=false}
+function onShort(){if(R.busy)return;if(menu.classList.contains('show'))return menu.classList.remove('show');if(!R.on)powerOn();else if(R.awake)sleep();else wake()}
+function onLong(){if(R.busy)return;if(!R.on)powerOn();else if(!R.awake)wake();else menu.classList.add('show')}
+(()=>{const el=$('#pwr');let pt,lp=false,down=false;
+el.addEventListener('pointerdown',e=>{e.preventDefault();down=true;lp=false;try{el.setPointerCapture(e.pointerId)}catch(_){}el.classList.add('pressed');clearTimeout(pt);pt=setTimeout(()=>{lp=true;onLong()},650)});
+el.addEventListener('pointerup',()=>{if(!down)return;down=false;clearTimeout(pt);el.classList.remove('pressed');if(!lp)onShort()});
+el.addEventListener('pointercancel',()=>{down=false;clearTimeout(pt);el.classList.remove('pressed')})})();
+menu.addEventListener('click',e=>{const b=e.target.closest('[data-pw]');if(b){const a=b.dataset.pw;if(a==='off')powerOff();else if(a==='reboot')reboot();else menu.classList.remove('show')}else if(e.target===menu)menu.classList.remove('show')});
+
+let dlgCb=null;
+function ask(t,m,ok,cb){$('#dlgt').textContent=t;$('#dlgm').textContent=m;$('#dlgok').textContent=ok;dlgCb=cb;$('#dlg').classList.add('show')}
+$('#dlg').addEventListener('click',e=>{const b=e.target.closest('[data-dk]');if(!b&&e.target.id!=='dlg')return;const cb=dlgCb;dlgCb=null;$('#dlg').classList.remove('show');if(b&&b.dataset.dk==='ok'&&cb)cb()});
+/* ---------- 鎖定、解鎖、主畫面 ---------- */
+const APPS=[
+{id:'br',n:'青魚瀏覽器',g:'linear-gradient(145deg,#37d9c5,#0b7f8c)',s:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>'},
+{id:'set',n:'青魚設定',g:'linear-gradient(145deg,#7d9aa0,#34545b)',s:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'},
+{id:'nt',n:'青魚筆記',g:'linear-gradient(145deg,#f4c95d,#d88a2b)',s:'<path d="M6 3h12v18H6zM9 8h6M9 12h6M9 16h4"/>'},
+{id:'ph',n:'電話',g:'linear-gradient(145deg,#4fd68a,#1c8f55)',s:'<path d="M6 3h3l2 5-2 1.5a11 11 0 0 0 5.5 5.5L16 13l5 2v3a3 3 0 0 1-3 3A15 15 0 0 1 3 6a3 3 0 0 1 3-3z"/>'},
+{id:'ms',n:'訊息',g:'linear-gradient(145deg,#5bc8ff,#2a74d9)',s:'<path d="M4 5h16v11H9l-5 4z"/>'},
+{id:'cam',n:'相機',g:'linear-gradient(145deg,#6b7c80,#1d2a2e)',s:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>'},
+{id:'pic',n:'青魚照片',g:'linear-gradient(145deg,#ffb86b,#e0568a)',s:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/>'},
+{id:'st',n:'Qene App Store',g:'linear-gradient(145deg,#5b8cff,#1fb5a6)',s:'<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6-5.3-3-5.3 3 1.2-6L3.4 9.3l6-.7z"/>'}];
+const STORE=[
+{id:'calc',n:'青魚計算機',d:'簡潔的四則運算',g:'linear-gradient(145deg,#ff9a6b,#d8503f)',s:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2M14 12h2M8 16h2M14 16h2"/>'},
+{id:'sw',n:'潮汐碼表',d:'計時與分圈',g:'linear-gradient(145deg,#8a7bff,#4a3fb5)',s:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M10 3h4"/>'},
+{id:'tank',n:'青魚魚缸',d:'點一點餵魚',g:'linear-gradient(145deg,#37d9c5,#0b6a7f)',s:'<use href="#fish" stroke="none"/>'},
+{id:'wc',n:'世界時鐘',d:'查看各地現在時間',g:'linear-gradient(145deg,#f4c95d,#c9822b)',s:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'}];
+const LIB=()=>APPS.concat(STORE.filter(a=>S.inst.includes(a.id)));
+function homeRender(){const L=APPS.concat(S.addHome?STORE.filter(a=>S.inst.includes(a.id)):[]);home.innerHTML=L.map((a,i)=>`<button class="ic" data-app="${a.id}" style="--i:${i}"><u style="background:${a.g}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${a.s}</svg></u>${a.n}</button>`).join('')}
+function openById(id){if(id==='set')srender();else if(id==='br')bshow();else if(id==='st')strender();else if(id==='ms'){mview='list';mR()}else if(id==='ph'){pt='pad';num='';phR()}else if(id==='pic')picR();if(!showApp(id))return;if(id==='cam')camStart()}
+function unlock(){if(R.demo)return;if(R.stage!=='lock'||!R.on||!R.awake)return;if(S.passOn){lock.style.transition='transform .3s,opacity .3s';lock.style.transform='';lock.style.opacity=1;passAsk('enter',doUnlock);return}doUnlock()}
+function doUnlock(){if(R.stage!=='lock')return;if(S.lockSnd)beep();lock.style.transition='transform .45s cubic-bezier(.3,.7,.2,1),opacity .45s';lock.style.transform='translateY(-100%)';lock.style.opacity=0;lock.style.pointerEvents='none';home.classList.remove('enter');void home.offsetWidth;home.classList.add('enter');R.stage='home';scr.dataset.s='home'}
+$('#ubtn').addEventListener('click',unlock);
+(()=>{let sy=null,dy=0,t0=0;
+lock.addEventListener('pointerdown',e=>{if(e.target.closest('button')||!S.gSwipe)return;sy=e.clientY;dy=0;t0=Date.now();try{lock.setPointerCapture(e.pointerId)}catch(_){}lock.style.transition='none'});
+lock.addEventListener('pointermove',e=>{if(sy===null)return;dy=Math.min(0,(e.clientY-sy)/R.sc);lock.style.transform='translateY('+dy+'px)';lock.style.opacity=Math.max(.2,1+dy/500)});
+const up=()=>{if(sy===null)return;sy=null;if(dy<-120||(dy<-45&&Date.now()-t0<320))unlock();else{lock.style.transition='transform .3s,opacity .3s';lock.style.transform='';lock.style.opacity=1}};
+lock.addEventListener('pointerup',up);lock.addEventListener('pointercancel',up)})();
+(()=>{const b=$('#bar');let sy=null,dy=0;
+b.addEventListener('pointerdown',e=>{sy=e.clientY;dy=0;try{b.setPointerCapture(e.pointerId)}catch(_){}});
+b.addEventListener('pointermove',e=>{if(sy!==null)dy=(e.clientY-sy)/R.sc});
+b.addEventListener('pointerup',()=>{if(sy===null)return;sy=null;if(!S.gSwipe)return;if(R.stage==='lock'){if(dy<-50)unlock()}else if(R.stage==='app'&&(dy<-20||Math.abs(dy)<8))goHome()});
+b.addEventListener('pointercancel',()=>{sy=null})})();
+function showApp(id){if(!R.on||!R.awake||R.stage==='lock')return false;if(S.limit&&id!=='set'&&totalUse()>=S.limit*60){toast('已達螢幕使用時間限額');return false}flush();if(id!=='cam')camStop();const el=STORE.some(a=>a.id===id)?'mini':id;$$('.app').forEach(a=>a.classList.toggle('open',a.id===el));R.stage='app';scr.dataset.s='app';R.cur=id;R.t0=Date.now();if(el==='mini')mini(id);return true}
+function goHome(){flush();camStop();stopCall();passHide();$('#tabs').classList.remove('show');$$('.app').forEach(a=>a.classList.remove('open'));R.stage='home';scr.dataset.s='home';if(document.activeElement)document.activeElement.blur()}
+home.addEventListener('click',e=>{const b=e.target.closest('[data-app]');if(b){if(S.click)beep(S.tone*1.5);openById(b.dataset.app)}});
+document.addEventListener('click',e=>{if(e.target.closest('[data-home]'))goHome()});
+
+/* ---------- 青魚設定 ---------- */
+let stack=['main'];
+const TITLES0={main:'設定',wifi:'Wi-Fi',bt:'藍牙',look:'外觀與桌布',brs:'青魚瀏覽器',gen:'一般',about:'關於本機'};
+const nav=(g,l,v)=>`<div class="row" data-nav="${g}"><span>${l}</span><em>${v}</em><i>›</i></div>`;
+const tg=(k,l)=>`<div class="row" data-tg="${k}"><span>${l}</span><b class="tg ${S[k]?'on':''}"></b></div>`;
+const seg=(k,arr)=>`<div class="seg">${arr.map(([v,l])=>`<button data-set="${k}" data-v="${v}" class="${S[k]===v?'on':''}">${l}</button>`).join('')}</div>`;
+const SP={
+main:()=>`<div class="grp">${nav('wifi','Wi-Fi',S.wifi?S.net:'關閉')}${nav('bt','藍牙',S.bt?'開啟':'關閉')}</div><div class="grp">${nav('look','外觀與桌布',S.dark?'深色':'淺色')}${nav('brs','青魚瀏覽器','')}${nav('gen','一般','')}</div>`,
+wifi:()=>`<div class="grp">${tg('wifi','Wi-Fi')}</div>`+(S.wifi?`<p class="cap">選擇網路</p><div class="grp">${['QeneFish-5G','Ocean_Guest','Reef-Lab'].map(n=>`<div class="row" data-net="${n}"><span>${n}</span>${n===S.net?'<em>✓ 已連線</em>':''}</div>`).join('')}</div>`:`<p class="cap">${S.cell?'Wi-Fi 已關閉，目前改用行動網路上網。':'Wi-Fi 已關閉，瀏覽器將無法載入外部網站。'}</p>`)+'<p class="cap">這是模擬狀態，不會更改 iPhone 的真實 Wi-Fi。</p>',
+cell:()=>`<div class="grp">${tg('cell','行動網路')}</div>`+(S.cell?`<p class="cap">電信業者</p><div class="grp">${Object.keys(CARR).map(k=>`<div class="row" data-car="${k}"><span>${CARR[k]}</span>${k===S.carrier?'<em>✓ 已連線</em>':''}</div>`).join('')}</div><p class="cap">行動網路可用來上網、撥打電話。</p>`:'<p class="cap">行動網路已關閉，將無法撥打電話；若 Wi-Fi 也關閉，則無法上網。</p>')+'<p class="cap">這是模擬狀態，不會更改 iPhone 的真實行動網路。</p>',
+bt:()=>`<div class="grp">${tg('bt','藍牙')}</div>`+(S.bt?`<p class="cap">我的裝置</p><div class="grp">${tg('btDev','青魚耳機 Pro')}</div>`:'<p class="cap">藍牙已關閉。</p>')+'<p class="cap">這是模擬狀態，不會連接真實藍牙裝置。</p>',
+look:()=>`<p class="cap">顯示模式</p>`+`<div class="seg"><button data-dark="0" class="${S.dark?'':'on'}">淺色</button><button data-dark="1" class="${S.dark?'on':''}">深色</button></div><p class="cap">桌布</p><div class="walls">${WALLS.map((w,i)=>`<div class="wt ${S.wall===i?'on':''}" data-wall="${i}" style="background:${w.c}">${w.n}</div>`).join('')}</div>`,
+brs:()=>`<p class="cap">首頁網址</p><input class="inp" id="homeinp" value="${esc(S.home)}" autocapitalize="off" autocorrect="off" placeholder="qene:home 或 https://…"><div class="grp">${tg('bmHome','首頁顯示書籤')}</div><p class="cap">網頁文字大小</p>${seg('fs',[[14,'小'],[16,'中'],[18,'大']])}<p class="cap">目前書籤：${S.bm.length} 個</p><button class="btn" data-act="clrbm">清除所有書籤</button>`,
+gen:()=>`<div class="grp">${nav('about','版本資訊','QeneOS 1.0')}</div><button class="btn" data-act="reset">重設青魚手機</button>`,
+about:()=>`<div class="grp"><div class="row"><span>名稱</span><em>青魚手機</em></div><div class="row"><span>英文名稱</span><em>Qene Fish Phone</em></div><div class="row"><span>版本</span><em>QeneOS ${S.ver}</em></div><div class="row"><span>型號</span><em>QF-1</em></div><div class="row"><span>音量</span><em>${S.vol}%</em></div></div><p class="cap">這是用網頁製作的手機模擬器，不是 iOS，也不是 Apple 官方產品。</p>`};
+const TITLES=Object.assign({},TITLES0,{cell:'行動網路',notif:'通知',sound:'聲音',focus:'專注模式',sct:'螢幕使用時間',a11y:'輔助使用',hs:'主畫面與App資料庫',gest:'多工處理與手勢',cam:'相機',wall:'背景圖片',cc:'控制中心',upd:'軟體更新',pw:'密碼'});
+const kb=()=>{let n=0;try{n=(localStorage.getItem(KEY)||'').length}catch(e){}return Math.round(n/1024)};
+const fmtT=s=>s<60?Math.round(s)+' 秒':Math.floor(s/60)+' 分 '+Math.round(s%60)+' 秒';
+const rng=(l,k,v,st)=>`<div class="sl">${l}<input type="range" min="${k==='bright'?20:0}" max="100" step="${st||1}" value="${v}" data-rng="${k}"></div>`;
+Object.assign(SP,{
+main:()=>`<div class="grp">${nav('wifi','Wi-Fi',S.wifi?S.net:'關閉')}${nav('cell','行動網路',S.cell?carName():'關閉')}${nav('bt','藍牙',S.bt?'開啟':'關閉')}</div><div class="grp">${nav('notif','通知',S.notif?'開啟':'關閉')}${nav('sound','聲音','')}${nav('focus','專注模式',S.focus||'關閉')}${nav('sct','螢幕使用時間','')}</div><div class="grp">${nav('gen','一般','')}${nav('pw','密碼',S.passOn?'開啟':'關閉')}${nav('a11y','輔助使用','')}${nav('hs','主畫面與App資料庫','')}${nav('gest','多工處理與手勢','')}${nav('cam','相機','')}${nav('wall','背景圖片','')}${nav('cc','控制中心','')}</div><div class="grp">${nav('look','顯示與亮度',S.dark?'深色':'淺色')}${nav('brs','青魚瀏覽器','')}</div>`,
+look:()=>`<p class="cap">顯示模式</p><div class="seg"><button data-dark="0" class="${S.dark?'':'on'}">淺色</button><button data-dark="1" class="${S.dark?'on':''}">深色</button></div>${rng('亮度','bright',Math.round(S.bright*100))}<div class="grp">${tg('land','橫向模式')}<div class="row" data-fs="1"><span>全螢幕</span><em>${isFs()?'開啟':'關閉'}</em></div></div><p class="cap">iPhone 的 Safari 不支援全螢幕，可改用「分享 > 加入主畫面」。</p><div class="grp">${nav('wall','背景圖片','')}</div>`,
+gen:()=>`<div class="grp">${nav('upd','軟體更新','')}${nav('kbd','鍵盤',fishOn()?'青魚鍵盤':'系統鍵盤')}<div class="row" data-act="demo"><span>展示模式</span><i>›</i></div>${nav('about','關於本機','QeneOS '+S.ver)}${tg('h24','24 小時制')}<div class="row"><span>儲存空間</span><em>${kb()} KB</em></div></div><button class="btn" data-act="clrimg">刪除自訂背景</button><button class="btn" data-act="reset">重設青魚手機</button>`,
+a11y:()=>`<div class="grp">${tg('abig','較大文字')}${tg('abold','粗體文字')}${tg('acon','提高對比')}${tg('anomo','減少動態效果')}</div>`,
+hs:()=>`<div class="grp">${tg('labels','顯示 App 名稱')}${tg('addHome','新下載的 App 加入主畫面')}</div><p class="cap">圖示大小</p>${seg('icsz',[[0,'標準'],[1,'大']])}<p class="cap">App 資料庫</p><div class="grp">${LIB().map(a=>`<div class="row"><span>${a.n}</span>${STORE.some(x=>x.id===a.id)?`<button class="get" data-del="${a.id}" style="background:#d6453d">移除</button>`:''}<button class="get" data-open="${a.id}">開啟</button></div>`).join('')}</div>`,
+gest:()=>`<div class="grp">${tg('gSwipe','上滑手勢（解鎖與回主畫面）')}${tg('gBar','顯示主畫面橫條')}</div><p class="cap">關閉上滑手勢後，請用「解鎖」按鈕與 App 內的返回按鈕。</p>`,
+cam:()=>`<div class="grp"><div class="row"><span>相機存取</span><em>沒有權限</em></div></div><p class="cap">青魚手機沒有開啟相機的權限，相機 App 只會顯示提示。</p>`,
+wall:()=>`<div class="walls">${WALLS.map((w,i)=>`<div class="wt ${!S.useCustom&&S.wall===i?'on':''}" data-wall="${i}" style="background:${w.c}">${w.n}</div>`).join('')}</div>${S.custom?`<div class="walls"><div class="wt ${S.useCustom?'on':''}" data-act="usecustom" style="background:center/cover url(${S.custom});grid-column:span 2;height:120px">自訂圖片</div></div>`:''}<label class="btn" style="color:var(--acc)">從相簿選擇圖片<input id="wfile" type="file" accept="image/*" hidden></label><div class="grp">${tg('scales','魚鱗紋理')}</div>`,
+cc:()=>`<div class="grp">${tg('ccOn','啟用控制中心')}${tg('ccApp','在 App 內使用')}</div><p class="cap">從手機螢幕右上角向下滑動，即可開啟控制中心。</p>`,
+notif:()=>`<div class="grp">${tg('notif','允許通知')}${tg('notifLock','在鎖定畫面顯示')}${tg('banner','橫幅通知')}${tg('nsound','通知聲音')}</div><button class="btn" style="color:var(--acc)" data-act="testnote">傳送測試通知</button><p class="cap">專注模式開啟時，不會顯示橫幅或發出聲音。</p>`,
+sound:()=>`${rng('媒體音量','vol',S.vol,10)}<div class="grp">${tg('click','按鍵音')}${tg('lockSnd','解鎖提示音')}</div><p class="cap">提示音高度</p>${seg('tone',[[440,'低'],[660,'中'],[880,'高']])}<p class="cap">與側邊音量鍵同步，僅控制網頁內的模擬音量。</p>`,
+focus:()=>`<div class="grp">${['勿擾','睡眠','工作'].map(n=>`<div class="row" data-focus="${n}"><span>${n}</span>${S.focus===n?'<em>✓ 開啟中</em>':''}</div>`).join('')}</div><p class="cap">開啟後狀態列會顯示 ☾，通知不會顯示橫幅也不會發出聲音。</p>`,
+sct:()=>{const L=LIB().filter(a=>a.id!=='set'),mx=Math.max(60,...L.map(a=>useOf(a.id)));return`<div class="grp"><div class="row"><span>累計使用</span><em>${fmtT(totalUse())}</em></div>${L.map(a=>`<div class="row"><span>${a.n}</span><em>${fmtT(useOf(a.id))}</em></div><div style="height:4px;margin:-8px 16px 10px;border-radius:2px;background:var(--acc);width:${Math.round(useOf(a.id)/mx*100)}%"></div>`).join('')}</div><p class="cap">App 使用限額（所有 App 合計，不含設定）</p>${seg('limit',[[0,'關閉'],[1,'1 分鐘'],[5,'5 分鐘'],[30,'30 分鐘']])}<button class="btn" data-act="clrusage">重設使用時間</button>`}
+});
+function srender(){const p=stack[stack.length-1];$('#stitle').textContent=TITLES[p];$('#sback').textContent=stack.length>1?'‹ 返回':'‹ 主畫面';$('#sc').innerHTML=SP[p]()}
+$('#sback').addEventListener('click',()=>{if(stack.length>1){stack.pop();srender()}else goHome()});
+$('#sc').addEventListener('click',e=>{const t=e.target;let b;
+if(b=t.closest('[data-nav]')){stack.push(b.dataset.nav);srender();$('#sc').scrollTop=0}
+else if(b=t.closest('[data-tg]')){const k=b.dataset.tg;S[k]=!S[k];save();applyAll();srender()}
+else if(b=t.closest('[data-net]')){S.net=b.dataset.net;save();srender();toast('已連線 '+S.net)}
+else if(b=t.closest('[data-dark]')){S.dark=b.dataset.dark==='1';save();applyAll();srender()}
+else if(b=t.closest('[data-wall]')){S.wall=+b.dataset.wall;save();applyAll();srender()}
+else if(b=t.closest('[data-set]')){S[b.dataset.set]=+b.dataset.v;save();applyAll();srender()}
+else if(b=t.closest('[data-act]')){if(b.dataset.act==='clrbm'){S.bm=[];save();srender();toast('書籤已清除')}else if(b.dataset.act==='reset'){ask('重設青魚手機','所有設定與資料都會清除，手機將重新啟動。','重設',()=>{try{localStorage.removeItem(KEY)}catch(_){}S=JSON.parse(JSON.stringify(D));br.tabs=[{h:[S.home],i:0}];br.cur=0;$('#ntx').value='';stack=['main'];clearInterval(dlT);R.upd={st:'idle',pct:0};R.autoNoted=0;R.dl={};R.nl=[{t:'歡迎使用青魚手機',b:'這是網頁模擬器，不是真正的手機系統。'}];sw.run=false;sw.t=0;sw.laps=[];mClr();applyAll();homeRender();strender();bshow();lrender();tick();srender();R.cur=null;reboot()})}}});
+$('#sc').addEventListener('click',e=>{if(e.target.closest('[data-fs]'))fs()});
+$('#sc').addEventListener('click',e=>{const b=e.target.closest('[data-car]');if(b&&CARR[b.dataset.car]){S.carrier=b.dataset.car;save();applyAll();srender();toast('已連線 '+carName())}});
+$('#sc').addEventListener('change',e=>{if(e.target.id==='homeinp'){S.home=norm(e.target.value)||'qene:home';e.target.value=S.home;save();toast('首頁已更新')}});
+
+/* ---------- 青魚瀏覽器 ---------- */
+const br={tabs:[{h:[S.home],i:0}],cur:0};
+const T=()=>br.tabs[br.cur],U=()=>T().h[T().i];
+function norm(u){u=(u||'').trim();if(!u)return'';if(/^qene:/i.test(u)||/^https?:\/\//i.test(u))return u;if(/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(u))return'https://'+u;return'qene:search?q='+encodeURIComponent(u)}
+function label(u){const m={'qene:home':'青魚首頁','qene:about':'青魚說明','qene:fish':'認識青魚','qene:bookmarks':'書籤'};if(m[u])return m[u];if(u.startsWith('qene:search'))return'搜尋';try{return new URL(u).hostname}catch(e){return u}}
+function go(u){u=norm(u);if(!u)return;const t=T();t.h=t.h.slice(0,t.i+1);t.h.push(u);t.i++;bshow()}
+function qpage(u){const parts=u.slice(5).split('?'),p=parts[0],q=parts[1]||'';
+if(p==='about')return'<h2>青魚說明</h2><p>青魚瀏覽器是青魚手機裡的模擬瀏覽器，不是完整的瀏覽器引擎。</p><p>以 <b>qene:</b> 開頭的是本機模擬頁面。輸入網址時，會嘗試用 iframe 載入外部網站；許多網站（包含 Google、YouTube）不允許被嵌入，頁面會顯示空白，請改用上方的「用 Safari 開啟」。</p><p>Wi-Fi 與行動網路都關閉後，外部網站將無法載入。</p>';
+if(p==='fish')return'<h2>認識青魚</h2><p>青魚（Mylopharyngodon piceus）是中國四大家魚之一，體型修長，背部青黑，常以螺、蚌為食。</p><p>青魚手機的鱗片桌布，靈感就來自魚鱗的排列。</p><p><a data-go="qene:home">回到首頁</a></p>';
+if(p==='bookmarks')return'<h2>書籤</h2>'+(S.bm.length?S.bm.map((b,i)=>`<div class="bmr"><a data-go="${esc(b.u)}">${esc(b.t)}<small>${esc(b.u)}</small></a><button data-rm="${i}">✕</button></div>`).join(''):'<p class="mut">還沒有書籤。點下方的 ☆ 可加入目前頁面。</p>');
+if(p==='search'){let k='';try{k=decodeURIComponent(q.slice(2))}catch(e){}return`<h2>搜尋：${esc(k)}</h2><p class="mut">這是本機模擬的搜尋結果，不是真實搜尋引擎。</p><p><a data-go="qene:about">青魚說明</a><br><small>qene:about</small></p><p><a data-go="qene:fish">認識青魚</a><br><small>qene:fish</small></p><p><a href="https://www.bing.com/search?q=${encodeURIComponent(k)}" target="_blank" rel="noopener">用 Bing 搜尋「${esc(k)}」（在 Safari 開啟）</a></p>`}
+return`<div class="bh"><svg><use href="#fish"/></svg><h2>青魚瀏覽器</h2><p class="mut">Qene Fish Browser</p><form class="sbox" data-search><input name="q" placeholder="搜尋或輸入網址" autocapitalize="off" enterkeyhint="search"><button>前往</button></form><div class="quick"><a data-go="qene:about">說明</a><a data-go="qene:fish">認識青魚</a><a data-go="qene:bookmarks">書籤</a></div>${S.bmHome&&S.bm.length?'<div class="bgrid">'+S.bm.map(b=>`<a data-go="${esc(b.u)}">${esc(b.t)}</a>`).join('')+'</div>':''}</div>`}
+function bshow(){const u=U(),t=T(),c=$('#brc');
+$('#burl').value=u==='qene:home'?'':u;$('#bback').disabled=t.i<1;$('#bfwd').disabled=t.i>=t.h.length-1;
+$('#bstar').textContent=S.bm.some(b=>b.u===u)?'★':'☆';$('#btabs').innerHTML='<b>'+br.tabs.length+'</b>';
+if(u.startsWith('qene:')){c.className='scroll';c.innerHTML='<div class="page">'+qpage(u)+'</div>';c.scrollTop=0}
+else if(!online()){c.className='scroll';c.innerHTML='<div class="page" style="text-align:center;padding-top:60px"><h2>沒有網路連線</h2><p class="mut">模擬的 Wi-Fi 與行動網路都已關閉。</p><p><a data-act="wifi">前往設定開啟 Wi-Fi</a></p></div>'}
+else{c.className='fr';c.innerHTML='<div class="exbar">以模擬方式嵌入。若頁面空白，代表該網站不允許嵌入。<a id="exo" target="_blank" rel="noopener">用 Safari 開啟</a></div>';$('#exo').href=u;const f=document.createElement('iframe');f.setAttribute('sandbox','allow-scripts allow-forms allow-same-origin allow-popups');f.src=u;c.appendChild(f)}}
+$('#bform').addEventListener('submit',e=>{e.preventDefault();const v=$('#burl').value;$('#burl').blur();go(v)});
+$('#burl').addEventListener('focus',e=>{setTimeout(()=>e.target.select(),30)});
+$('#bhome').addEventListener('click',()=>go(S.home));
+$('#bback').addEventListener('click',()=>{if(T().i>0){T().i--;bshow()}});
+$('#bfwd').addEventListener('click',()=>{if(T().i<T().h.length-1){T().i++;bshow()}});
+$('#breload').addEventListener('click',()=>{bshow();toast('已重新整理')});
+$('#bstar').addEventListener('click',()=>{const u=U(),i=S.bm.findIndex(b=>b.u===u);if(i>=0){S.bm.splice(i,1);toast('已移除書籤')}else{S.bm.push({t:label(u),u});toast('已加入書籤')}save();bshow()});
+$('#brc').addEventListener('click',e=>{let b;if(b=e.target.closest('[data-go]'))go(b.dataset.go);else if(b=e.target.closest('[data-rm]')){S.bm.splice(+b.dataset.rm,1);save();bshow()}else if(e.target.closest('[data-act=wifi]')){stack=['main','wifi'];srender();showApp('set')}});
+$('#brc').addEventListener('submit',e=>{const f=e.target.closest('[data-search]');if(f){e.preventDefault();const i=f.querySelector('input');const v=i.value;i.blur();go(v)}});
+function trender(){$('#tgrid').innerHTML=br.tabs.map((t,i)=>`<div class="tc ${i===br.cur?'on':''}" data-t="${i}"><b>${esc(label(t.h[t.i]))}</b><small>${esc(t.h[t.i])}</small><button data-x="${i}">✕</button></div>`).join('')}
+$('#btabs').addEventListener('click',()=>{trender();$('#tabs').classList.add('show')});
+$('#tdone').addEventListener('click',()=>$('#tabs').classList.remove('show'));
+$('#tnew').addEventListener('click',()=>{br.tabs.push({h:[S.home],i:0});br.cur=br.tabs.length-1;$('#tabs').classList.remove('show');bshow()});
+$('#tgrid').addEventListener('click',e=>{const x=e.target.closest('[data-x]');if(x){const i=+x.dataset.x;if(br.tabs.length===1)br.tabs[0]={h:[S.home],i:0};else{br.tabs.splice(i,1);if(br.cur>=br.tabs.length)br.cur=br.tabs.length-1;else if(br.cur>i)br.cur--}trender();bshow();return}
+const c=e.target.closest('[data-t]');if(c){br.cur=+c.dataset.t;$('#tabs').classList.remove('show');bshow()}});
+
+/* ---------- 筆記 ---------- */
+$('#ntx').value=S.note;$('#ntx').addEventListener('input',e=>{S.note=e.target.value;save()});
+
+/* ---------- 新增功能 ---------- */
+function flush(){kbHide();pvClose();if(R.cur){S.usage[R.cur]=(S.usage[R.cur]||0)+(Date.now()-R.t0)/1000;R.cur=null;save()}}
+const useOf=id=>(S.usage[id]||0)+(R.cur===id?(Date.now()-R.t0)/1000:0);
+const totalUse=()=>APPS.concat(STORE).filter(a=>a.id!=='set').reduce((s,a)=>s+useOf(a.id),0);
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.rng;if(!k)return;const v=+e.target.value;if(k==='bright')S.bright=v/100;else S[k]=v;save();applyAll();if(k==='vol')beep(400+v*5)});
+$('#sc').addEventListener('click',e=>{const t=e.target;let b;
+if(b=t.closest('[data-wall]')){S.useCustom=false;save();applyAll();srender()}
+else if(b=t.closest('[data-focus]')){S.focus=S.focus===b.dataset.focus?'':b.dataset.focus;save();applyAll();srender()}
+else if(b=t.closest('[data-open]'))openById(b.dataset.open);
+else if(b=t.closest('[data-del]')){S.inst=S.inst.filter(x=>x!==b.dataset.del);save();homeRender();srender();toast('已移除')}
+else if(b=t.closest('[data-act]')){const a=b.dataset.act;
+ if(a==='testnote')notify('青魚手機','這是一則測試通知');
+ else if(a==='useshot'){S.custom=S.shot;S.useCustom=true;save();applyAll();srender()}
+ else if(a==='usecustom'){S.useCustom=true;save();applyAll();srender()}
+ else if(a==='clrimg'){S.custom='';S.shot='';S.useCustom=false;save();applyAll();srender();toast('已刪除圖片')}
+ else if(a==='clrusage'){S.usage={};R.t0=Date.now();save();srender()}}});
+function shrink(src,max,cb){const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.8))};i.src=src}
+$('#sc').addEventListener('change',e=>{if(e.target.id!=='wfile'||!e.target.files[0])return;const r=new FileReader();r.onload=()=>shrink(r.result,720,u=>{S.custom=u;S.useCustom=true;save();applyAll();srender();toast('已設定背景圖片')});r.readAsDataURL(e.target.files[0])});
+/* 通知 */
+function lrender(){$('#lnotes').innerHTML=S.notif&&S.notifLock?R.nl.map(n=>`<div class="note"><b>${esc(n.t)}</b>${esc(n.b)}</div>`).join(''):''}
+let bt2;function notify(t,b){if(!S.notif){toast('通知已關閉');return}R.nl.unshift({t,b});R.nl=R.nl.slice(0,3);lrender();if(S.focus)return;if(S.nsound)beep(S.tone*1.3);if(S.banner&&R.on&&R.awake&&R.stage!=='lock'){const el=$('#banner');el.innerHTML='<b>'+esc(t)+'</b>'+esc(b);el.classList.add('show');clearTimeout(bt2);bt2=setTimeout(()=>el.classList.remove('show'),3000)}}
+/* 相機：無權限，僅保留空函式 */
+function camStop(){}
+function camStart(){}
+/* App Store */
+function strender(){const q=($('#sq').value||'').trim();$('#slist').innerHTML=STORE.filter(a=>!q||(a.n+a.d).includes(q)).map(a=>{const have=S.inst.includes(a.id),dl=R.dl[a.id];return`<div class="row"><u class="su" style="background:${a.g}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${a.s}</svg></u><span><b>${a.n}</b><br><small>${a.d}</small></span><button class="get" data-get="${a.id}" ${dl?'disabled':''}>${have?'開啟':dl?'下載中…':'取得'}</button></div>`}).join('')||'<p class="cap">找不到符合的 App。</p>'}
+$('#sq').addEventListener('input',strender);
+$('#slist').addEventListener('click',e=>{const b=e.target.closest('[data-get]');if(!b)return;const id=b.dataset.get;if(S.inst.includes(id)){openById(id);return}if(!online()){toast('需要網路連線才能下載');return}R.dl[id]=1;strender();setTimeout(()=>{if(!R.dl[id])return;delete R.dl[id];S.inst.push(id);save();homeRender();strender();notify('Qene App Store',STORE.find(a=>a.id===id).n+' 已安裝')},1500)});
+/* 內建小 App */
+const sw={run:false,t:0,s:0,laps:[]};let C;
+const CITY=[['台北','Asia/Taipei'],['東京','Asia/Tokyo'],['倫敦','Europe/London'],['紐約','America/New_York'],['洛杉磯','America/Los_Angeles']];
+function swT(){const ms=sw.t+(sw.run?Date.now()-sw.s:0),p=n=>String(n).padStart(2,'0');return p(Math.floor(ms/60000))+':'+p(Math.floor(ms/1000)%60)+'.'+p(Math.floor(ms/10)%100)}
+function swUI(){$('#swgo').textContent=sw.run?'停止':'開始';$('#laps').innerHTML=sw.laps.map((l,i)=>`<div class="row"><span>第 ${sw.laps.length-i} 圈</span><em>${l}</em></div>`).join('')}
+setInterval(()=>{if(R.cur==='sw'&&sw.run){const d=$('#swd');if(d)d.textContent=swT()}},50);
+function wcR(){if(R.cur!=='wc')return;$('#mbody').innerHTML='<div class="grp">'+CITY.map(([n,z])=>`<div class="row"><span>${n}</span><em>${new Date().toLocaleTimeString('zh-TW',{timeZone:z,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:S.h24?'h23':'h12'})}</em></div>`).join('')+'</div>'}
+function cal(){const a=C.a,b=parseFloat(C.cur);if(C.op==='÷'&&!b){toast('無法除以 0');return'0'}return String(+({'+':a+b,'−':a-b,'×':a*b,'÷':a/b}[C.op]).toPrecision(10))}
+function ck(k){if(/[\d.]/.test(k)){if(C.fresh||(C.cur==='0'&&k!=='.')){C.cur=k==='.'?'0.':k;C.fresh=false}else if(!(k==='.'&&C.cur.includes('.')))C.cur+=k}
+else if(k==='C')C={cur:'0',a:null,op:null,fresh:false};
+else if(k==='±')C.cur=String(-parseFloat(C.cur));
+else if(k==='%')C.cur=String(parseFloat(C.cur)/100);
+else{if(C.op&&!C.fresh)C.cur=cal();if(k==='=')C.op=null;else{C.a=parseFloat(C.cur);C.op=k}C.fresh=true}
+$('#cdsp').textContent=C.cur}
+function mini(id){const a=STORE.find(x=>x.id===id);$('#mtitle').textContent=a.n;const b=$('#mbody');
+if(id==='calc'){C={cur:'0',a:null,op:null,fresh:false};b.innerHTML='<div id="cdsp">0</div><div class="ckeys">'+['C','±','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.','='].map(k=>`<button data-k="${k}" class="${'÷×−+='.includes(k)?'op':''}${k==='0'?' z':''}">${k}</button>`).join('')+'</div>'}
+else if(id==='sw'){b.innerHTML='<div id="swd" class="big">'+swT()+'</div><div class="seg"><button data-sw="go" id="swgo"></button><button data-sw="lap">分圈</button><button data-sw="rst">重置</button></div><div class="grp" id="laps"></div>';swUI()}
+else if(id==='tank'){b.innerHTML='<div id="tank"><svg style="top:30px;animation-duration:7s"><use href="#fish"/></svg><svg style="top:110px;animation-duration:11s;animation-delay:-4s;color:#f4c95d"><use href="#fish"/></svg><svg style="top:180px;animation-duration:9s;animation-delay:-2s;color:#ff9a6b"><use href="#fish"/></svg></div><p class="cap" id="fedc">已餵食 '+S.fed+' 次</p><button class="get" style="width:100%;padding:14px;font-size:16px" data-feed="1">餵食</button>'}
+else wcR()}
+$('#mbody').addEventListener('click',e=>{const k=e.target.closest('[data-k]');if(k){ck(k.dataset.k);return}const s=e.target.closest('[data-sw]');if(s){const a=s.dataset.sw;if(a==='go'){if(sw.run){sw.t+=Date.now()-sw.s;sw.run=false}else{sw.s=Date.now();sw.run=true}}else if(a==='lap'){if(sw.run)sw.laps.unshift(swT())}else{sw.run=false;sw.t=0;sw.laps=[]}$('#swd').textContent=swT();swUI();return}
+if(e.target.closest('[data-feed]')){S.fed++;save();$('#fedc').textContent='已餵食 '+S.fed+' 次';const tk=$('#tank');tk.style.filter='brightness(1.5)';setTimeout(()=>tk.style.filter='',200)}});
+/* 控制中心 */
+const cc=$('#cc');let wf0=true;
+function ccRender(){cc.innerHTML=`<div class="cct"><button class="tile ${S.wifi?'on':''}" data-c="wifi">Wi-Fi<br><small>${S.wifi?esc(S.net):'關閉'}</small></button><button class="tile ${S.cell?'on':''}" data-c="cell">行動網路<br><small>${S.cell?carName():'關閉'}</small></button><button class="tile ${S.bt?'on':''}" data-c="bt">藍牙<br><small>${S.bt?'開啟':'關閉'}</small></button><button class="tile ${S.focus?'on':''}" data-c="focus">專注模式<br><small>${S.focus||'關閉'}</small></button><button class="tile ${S.dark?'on':''}" data-c="dark">深色模式<br><small>${S.dark?'開啟':'關閉'}</small></button><button class="tile ${S.land?'on':''}" data-c="land">橫向<br><small>${S.land?'開啟':'關閉'}</small></button><button class="tile ${fishOn()?'on':''}" data-c="kbm">鍵盤<br><small>${fishOn()?'青魚':'系統'}</small></button><button class="tile ${isFs()?'on':''}" data-c="full">全螢幕<br><small>${isFs()?'開啟':'關閉'}</small></button></div><div class="ccs">亮度<input type="range" min="20" max="100" value="${Math.round(S.bright*100)}" data-rng="bright"></div><div class="ccs">音量<input type="range" min="0" max="100" step="10" value="${S.vol}" data-rng="vol"></div><button class="tile" style="margin-top:12px;width:100%;height:54px" data-c="close">完成</button>`}
+function ccHide(){cc.classList.remove('show');srender();if(wf0!==online())bshow()}
+cc.addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b){const c=b.dataset.c;if(c==='close')return ccHide();if(c==='full'){fs();return}if(c==='kbm'){kbMode(fishOn()?'sys':'fish');ccRender();return}if(c==='focus')S.focus=S.focus?'':'勿擾';else S[c]=!S[c];save();applyAll();ccRender()}else if(e.target===cc)ccHide()});
+(()=>{const z=$('#ccz');let sy=null;z.addEventListener('pointerdown',e=>{sy=e.clientY;try{z.setPointerCapture(e.pointerId)}catch(_){}});z.addEventListener('pointerup',e=>{if(sy!==null&&(e.clientY-sy)/R.sc>28&&S.ccOn&&R.on&&R.awake&&!(R.stage==='app'&&!S.ccApp)){wf0=online();ccRender();cc.classList.add('show')}sy=null});z.addEventListener('pointercancel',()=>{sy=null})})();
+
+/* 全螢幕 */
+const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+function fs(){const d=document,el=d.documentElement;if(isFs()){try{(d.exitFullscreen||d.webkitExitFullscreen).call(d)}catch(e){}return}const f=el.requestFullscreen||el.webkitRequestFullscreen;if(!f){toast('此瀏覽器不支援全螢幕');return}try{const r=f.call(el);if(r&&r.catch)r.catch(()=>toast('無法進入全螢幕'))}catch(e){toast('無法進入全螢幕')}}
+['fullscreenchange','webkitfullscreenchange'].forEach(t=>document.addEventListener(t,()=>{fit();if(cc.classList.contains('show'))ccRender();if(R.cur==='set')srender()}));
+/* 系統更新 */
+const VERS=['1.0','1.1','1.2','2.0'];
+const UPDI={'1.1':{mb:182,n:['改善鎖定畫面解鎖動畫','修正已知問題']},'1.2':{mb:240,n:['提升控制中心反應速度','改善電池顯示穩定性']},'2.0':{mb:512,n:['全新青魚潮汐介面','更快的應用程式啟動','安全性改善']}};
+R.upd={st:'idle',pct:0};
+const nextV=()=>VERS[VERS.indexOf(S.ver)+1];
+function autoChk(){const n=nextV();if(S.autoUpd&&online()&&n&&!R.autoNoted){R.autoNoted=1;notify('軟體更新','QeneOS '+n+' 已可下載，請到「設定 > 一般 > 軟體更新」')}}
+async function install(v){if(R.busy)return;R.busy=true;flush();camStop();$('#cc').classList.remove('show');showBoot('正在安裝 QeneOS '+v+'…',true);await wait(2000);S.ver=v;save();R.upd={st:'idle',pct:0};R.autoNoted=0;showBoot('正在重新啟動…',true);await wait(2000);finish();notify('QeneOS 已更新','目前版本：QeneOS '+v)}
+Object.assign(SP,{upd:()=>{const u=R.upd,nx=nextV(),info=nx&&UPDI[nx],chk='<button class="btn" style="color:var(--acc)" data-act="chk">檢查更新</button>';
+let h=`<div class="grp"><div class="row"><span>目前版本</span><em>QeneOS ${S.ver}</em></div></div>`;
+if(u.st==='checking')h+='<p class="cap">正在檢查更新…</p>';
+else if(u.st==='idle')h+=chk;
+else if(!nx)h+='<p class="cap">您的軟體是最新版本。</p>'+chk;
+else{h+=`<div class="grp"><div class="row"><span><b>QeneOS ${nx}</b><br><small>${info.mb} MB</small></span></div><div class="row" style="display:block;line-height:1.7;font-size:14px">${info.n.map(x=>'• '+x).join('<br>')}</div></div>`;
+if(u.st==='dl')h+=`<div class="sl">下載中 <span id="upp">${u.pct}</span>%<div style="height:6px;border-radius:3px;background:var(--line);margin-top:10px"><i id="upb" style="display:block;height:100%;width:${u.pct}%;background:var(--acc);border-radius:3px"></i></div></div>`;
+else if(u.st==='ready')h+='<button class="btn" style="color:var(--acc)" data-act="inst">立即安裝</button><p class="cap">安裝後會自動重新啟動。</p>';
+else h+='<button class="btn" style="color:var(--acc)" data-act="dl">下載並安裝</button>'}
+return h+`<div class="grp">${tg('autoUpd','自動檢查更新')}</div><p class="cap">這是模擬的系統更新，只會改變此模擬器內的版本號，不會更新 iPhone 的系統。</p>`}});
+let dlT;
+$('#sc').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+if(a==='chk'){if(!online()){toast('需要網路連線才能檢查更新');return}R.upd={st:'checking',pct:0};srender();setTimeout(()=>{R.upd={st:'result',pct:0};srender()},1200)}
+else if(a==='dl'){if(!online()){toast('需要網路連線才能下載');return}R.upd={st:'dl',pct:0};srender();clearInterval(dlT);dlT=setInterval(()=>{if(!online()){clearInterval(dlT);R.upd={st:'result',pct:0};srender();toast('網路中斷，下載已停止');return}R.upd.pct=Math.min(100,R.upd.pct+4+Math.floor(Math.random()*6));const p=$('#upp'),w=$('#upb');if(p)p.textContent=R.upd.pct;if(w)w.style.width=R.upd.pct+'%';if(R.upd.pct>=100){clearInterval(dlT);R.upd.st='ready';srender()}},150)}
+else if(a==='inst')install(nextV())});
+/* 電話與訊息 */
+const CON=[{id:'k',n:'kiwe bire',num:'0900 000 001'},{id:'q',n:'qene',num:'0900 000 002'}];
+S.msgs=S.msgs||{};S.calls=S.calls||[];
+const dg=s=>s.replace(/\D/g,'');
+const hm=ts=>new Date(ts).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hourCycle:S.h24?'h23':'h12'});
+const conOf=id=>CON.find(c=>c.id===id);
+let pt='pad',num='',thr=null,mview='list',ringT;
+function phR(){$$('#phtabs button').forEach(b=>b.classList.toggle('on',b.dataset.pt===pt));const b=$('#phb');
+if(pt==='pad')b.innerHTML=`<div id="pnum">${num||'&nbsp;'}</div><div class="kp">${[...'123456789*0#'].map(k=>`<button data-k2="${k}">${k}</button>`).join('')}<span></span><button class="callg" data-pc="1">☎</button><button data-pd="1" style="font-size:20px">⌫</button></div><p class="cap" style="text-align:center">只能撥打聯絡人的號碼</p>`;
+else if(pt==='con')b.innerHTML=`<p class="cap">共 ${CON.length} 位聯絡人</p><div class="grp">${CON.map(c=>`<div class="row"><span><b>${esc(c.n)}</b><br><small>${c.num}</small></span><button class="get" data-msg="${c.id}">訊息</button><button class="get callg" data-call="${c.id}">撥打</button></div>`).join('')}</div>`;
+else b.innerHTML=S.calls.length?`<div class="grp">${S.calls.slice(0,20).map(c=>`<div class="row"><span><b style="color:#d6453d">${esc(conOf(c.id).n)}</b><br><small>無人接聽</small></span><em>${hm(c.ts)}</em><button class="get callg" data-call="${c.id}">撥打</button></div>`).join('')}</div>`:'<p class="cap" style="text-align:center;margin-top:40px">沒有通話紀錄</p>'}
+function stopCall(){clearInterval(ringT);$('#call').classList.remove('show')}
+function startCall(id){if(!S.cell){toast('行動網路已關閉，無法撥打電話');return}const c=conOf(id),el=$('#call');el.innerHTML=`<div style="font-size:30px">${esc(c.n)}</div><div id="cst" style="opacity:.8">撥號中…</div><button class="cbtn" id="hang">✕</button>`;el.classList.add('show');let n=0;clearInterval(ringT);
+const end=miss=>{clearInterval(ringT);if(miss){S.calls.unshift({id,ts:Date.now()});save();$('#cst').textContent='無人接聽';$('#hang').style.display='none';setTimeout(()=>{el.classList.remove('show');phR()},1400)}else el.classList.remove('show')};
+ringT=setInterval(()=>{n++;if(n===1)$('#cst').textContent='響鈴中…';if(n%2===1)beep(480);if(n>=7)end(true)},1200);$('#hang').onclick=()=>end(false)}
+$('#phb').addEventListener('click',e=>{const x=e.target;let b;
+if(b=x.closest('[data-k2]')){if(num.length<15)num+=b.dataset.k2;phR()}
+else if(x.closest('[data-pd]')){num=num.slice(0,-1);phR()}
+else if(x.closest('[data-pc]')){const d=dg(num),c=CON.find(k=>dg(k.num)===d);if(!d)return;if(!c){toast('只能撥打聯絡人的號碼');return}startCall(c.id)}
+else if(b=x.closest('[data-call]'))startCall(b.dataset.call);
+else if(b=x.closest('[data-msg]'))openThread(b.dataset.msg)});
+$('#phtabs').addEventListener('click',e=>{const b=e.target.closest('[data-pt]');if(b){pt=b.dataset.pt;phR()}});
+function mR(){const b=$('#mb');$('#mform').classList.toggle('show',mview==='thr');$('#mnew').style.display=mview==='list'?'':'none';
+$('#mst').textContent=mview==='thr'?conOf(thr).n:mview==='new'?'新訊息':'訊息';$('#mback').textContent=mview==='list'?'‹ 主畫面':'‹ 返回';
+if(mview==='list')b.innerHTML=`<p class="cap">共 ${CON.length} 位聯絡人</p><div class="grp">${CON.map(c=>{const m=(S.msgs[c.id]||[]).slice(-1)[0];return`<div class="row" data-thr="${c.id}"><span><b>${esc(c.n)}</b><br><small>${m?esc(m.t):'尚無訊息'}</small></span><em>${m?hm(m.ts):''}</em><i>›</i></div>`}).join('')}</div>`;
+else if(mview==='new')b.innerHTML=`<p class="cap">收件人（只能選擇聯絡人）</p><div class="grp">${CON.map(c=>`<div class="row" data-thr="${c.id}"><span><b>${esc(c.n)}</b><br><small>${c.num}</small></span><i>›</i></div>`).join('')}</div>`;
+else{const L=S.msgs[thr]||[];b.innerHTML=L.length?L.map(m=>`<div class="bub me">${esc(m.t)}<small>${hm(m.ts)} · 已傳送</small></div>`).join(''):'<p class="cap" style="text-align:center;margin-top:30px">還沒有訊息，傳一則吧。</p>';b.scrollTop=b.scrollHeight}}
+function openThread(id){thr=id;mview='thr';if(showApp('ms'))mR()}
+$('#mb').addEventListener('click',e=>{const b=e.target.closest('[data-thr]');if(b){thr=b.dataset.thr;mview='thr';mR()}});
+$('#mnew').addEventListener('click',()=>{mview='new';mR()});
+$('#mback').addEventListener('click',()=>{if(mview==='list')goHome();else{mview='list';mR()}});
+$('#mform').addEventListener('submit',e=>{e.preventDefault();const i=$('#mtx'),v=i.value.trim();if(!v||!thr)return;if(!online()){toast('沒有網路連線，無法傳送');return}(S.msgs[thr]=S.msgs[thr]||[]).push({t:v,ts:Date.now()});save();i.value='';mR();if(S.click)beep(900)});
+/* 密碼 */
+const P={mode:null,buf:'',cb:null,tmp:'',force:false};R.pf=0;
+const pLen=()=>P.mode==='reset'?5:4;
+function pDraw(msg){$('#ptit').textContent={enter:'輸入密碼',reset:'重設密碼：請輸入 5 次 0',new1:'設定新密碼',new2:'再輸入一次新密碼'}[P.mode];$('#pmsg').textContent=msg||'';$('#pdots').innerHTML=Array.from({length:pLen()},(_,i)=>`<i class="${i<P.buf.length?'on':''}"></i>`).join('');$('#preset').style.display=(P.mode==='enter'&&R.pf>=5)?'block':'none';$('#pcancel').style.visibility=P.force&&(P.mode==='new1'||P.mode==='new2')?'hidden':'visible'}
+function passAsk(mode,cb){P.mode=mode;P.buf='';P.cb=cb;P.force=false;$('#pass').classList.add('show');scr.dataset.s='lock';pDraw(R.pf>=5&&mode==='enter'?'已失敗 '+R.pf+' 次，可以重設密碼':'')}
+function passHide(){if(P.mode===null)return;P.mode=null;$('#pass').classList.remove('show');scr.dataset.s=R.stage}
+function shake(){const d=$('#pdots');d.classList.remove('shake');void d.offsetWidth;d.classList.add('shake')}
+function pKey(d){if(!P.mode||P.buf.length>=pLen())return;P.buf+=d;if(S.click)beep(S.tone*1.2);pDraw();if(P.buf.length===pLen())setTimeout(pDone,120)}
+function pDone(){if(!P.mode)return;const b=P.buf;P.buf='';
+if(P.mode==='enter'){if(b===S.pass){R.pf=0;const cb=P.cb;passHide();if(cb)cb()}else{R.pf++;shake();pDraw(R.pf>=5?'已失敗 '+R.pf+' 次，可以重設密碼':'密碼錯誤，已失敗 '+R.pf+' 次')}}
+else if(P.mode==='reset'){if(b==='00000'){R.pf=0;P.mode='new1';P.force=true;pDraw('驗證成功，請設定新密碼')}else{shake();pDraw('輸入錯誤，請輸入 5 次 0')}}
+else if(P.mode==='new1'){P.tmp=b;P.mode='new2';pDraw()}
+else if(P.mode==='new2'){if(b===P.tmp){S.pass=b;S.passOn=true;save();const cb=P.cb;passHide();toast('密碼已設定');if(cb)cb()}else{P.mode='new1';shake();pDraw('兩次輸入不一致，請重新設定')}}}
+$('#pkeys').addEventListener('click',e=>{const k=e.target.closest('[data-d]');if(k)return pKey(k.dataset.d);if(e.target.closest('[data-del]')&&P.mode){P.buf=P.buf.slice(0,-1);pDraw()}});
+$('#pcancel').addEventListener('click',()=>{if(P.mode==='reset'){P.mode='enter';P.buf='';pDraw()}else if(!P.force)passHide()});
+$('#preset').addEventListener('click',()=>{P.mode='reset';P.buf='';pDraw()});
+Object.assign(SP,{pw:()=>`<div class="grp"><div class="row" data-pwtg="1"><span>開啟密碼</span><b class="tg ${S.passOn?'on':''}"></b></div>${S.passOn?'<div class="row" data-pwchg="1"><span>變更密碼</span><i>›</i></div>':''}</div><p class="cap">開啟後，解鎖時需要輸入 4 位數密碼。連續輸入錯誤 5 次會出現「重設密碼」。這是模擬功能，密碼只存在這個瀏覽器。</p>`});
+$('#sc').addEventListener('click',e=>{if(e.target.closest('[data-pwtg]')){if(S.passOn)passAsk('enter',()=>{S.passOn=false;save();srender()});else passAsk('new1',()=>srender())}else if(e.target.closest('[data-pwchg]'))passAsk('enter',()=>passAsk('new1',()=>srender()))});
+/* ---------- 青魚鍵盤 ---------- */
+const kbEl=$('#kb'),TXT='textarea,input:not([type]),input[type=text],input[type=search],input[type=url]';
+const fishOn=()=>S.kb!=='sys';
+const isTxt=el=>!!(el&&el.matches&&el.matches(TXT)&&!el.readOnly&&!el.disabled&&scr.contains(el));
+const K={el:null,layer:0,sh:0,t:0,rp:null,rt:null};
+const rw=s=>s.split(' ');
+const LAY=[[rw('q w e r t y u i o p'),rw('a s d f g h j k l'),rw('⇧ z x c v b n m ⌫')],
+[rw('1 2 3 4 5 6 7 8 9 0'),rw('+ − × ÷ = % ( ) / @'),rw(`#+= . , ? ! - ' " ⌫`)],
+[rw('[ ] { } < > # ^ * ~'),rw('$ € £ ¥ & _ \\ | ; :'),rw('123 ≠ ≈ ± √ π ° ⌫')]];
+TITLES.kbd='鍵盤';
+function setIm(el){if(el.dataset.im0===undefined)el.dataset.im0=el.getAttribute('inputmode')||'';if(fishOn())el.setAttribute('inputmode','none');else if(el.dataset.im0)el.setAttribute('inputmode',el.dataset.im0);else el.removeAttribute('inputmode')}
+function kbDraw(){const L=K.layer,up=K.sh>0&&L===0;
+const lb=k=>k==='⇧'?(K.sh===2?'⇪':K.sh?'⬆':'⇧'):k==='space'?'<svg width="20" height="20" style="color:var(--acc)"><use href="#fish"/></svg>':k==='return'?'↵':up&&k.length===1?k.toUpperCase():esc(k);
+const cl=k=>(['⇧','⌫','123','abc','#+='].includes(k)?'f w ':k==='space'?'sp ':k==='return'?'a w ':'')+(k==='⇧'&&K.sh?'a':'');
+const rows=LAY[L].concat([[L?'abc':'123',',','space','.','return']]);
+kbEl.querySelector('.kk').innerHTML=rows.map((r,i)=>`<div class="kr${L===0&&i===1?' ind':''}">${r.map(k=>`<button tabindex="-1" data-k="${esc(k)}" class="${cl(k)}">${lb(k)}</button>`).join('')}</div>`).join('')}
+function kbStop(){clearTimeout(K.rt);clearInterval(K.rp);$$('#kb .pr').forEach(b=>b.classList.remove('pr'))}
+function kbReveal(el){scr.scrollTop=0;scr.scrollLeft=0;const p=el.closest('.scroll');if(!p)return;setTimeout(()=>{const a=el.getBoundingClientRect(),b=p.getBoundingClientRect();if(a.bottom>b.bottom)p.scrollTop+=(a.bottom-b.bottom)/R.sc+8;else if(a.top<b.top)p.scrollTop-=(b.top-a.top)/R.sc+8},60)}
+function kbShow(el){K.el=el;if(!fishOn())return;if(!scr.classList.contains('kbon')){K.layer=0;K.sh=0}kbDraw();kbEl.style.display='flex';scr.classList.add('kbon');scr.style.setProperty('--kbh',kbEl.offsetHeight+'px');kbReveal(el)}
+function kbHide(b){kbStop();if(scr.classList.contains('kbon')){const el=K.el;scr.classList.remove('kbon');kbEl.style.display='none';scr.style.removeProperty('--kbh');if(el&&el._v0!==undefined&&el.value!==el._v0){el._v0=el.value;el.dispatchEvent(new Event('change',{bubbles:true}))}}K.el=null;if(b!==false){const a=document.activeElement;if(isTxt(a))a.blur()}}
+function kkey(k,rep){const el=K.el;if(!isTxt(el)){kbStop();return}
+if(document.activeElement!==el)el.focus({preventScroll:true});
+if(k==='⇧'){const n=Date.now();K.sh=K.sh===0?1:(K.sh===1&&n-K.t<350?2:0);K.t=n;return kbDraw()}
+if(k==='123'||k==='#+='||k==='abc'){K.layer=k==='123'?1:k==='#+='?2:0;K.sh=0;return kbDraw()}
+const s=el.selectionStart,e=el.selectionEnd;if(s===null)return;
+if(k==='return'){if(el.tagName==='TEXTAREA')el.setRangeText('\n',s,e,'end');else if(el.form){const f=el.form;if(f.requestSubmit)f.requestSubmit();else f.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));return}else{el.blur();return}}
+else if(k==='⌫'){if(s!==e)el.setRangeText('',s,e,'end');else if(s>0){const c=el.value.charCodeAt(s-1);el.setRangeText('',s-(c>=0xDC00&&c<=0xDFFF&&s>1?2:1),s,'end')}else return}
+else{const ch=k==='space'?' ':(K.sh>0&&K.layer===0?k.toUpperCase():k);el.setRangeText(ch,s,e,'end');if(K.sh===1&&K.layer===0){K.sh=0;kbDraw()}}
+if(el.selectionStart===el.value.length){el.scrollLeft=el.scrollWidth;el.scrollTop=el.scrollHeight}
+el.dispatchEvent(new Event('input',{bubbles:true}));if(S.click&&!rep)beep(900)}
+function kbMode(m){const el=K.el||(isTxt(document.activeElement)?document.activeElement:null);S.kb=m;save();let a=null,b=null;if(el){a=el.selectionStart;b=el.selectionEnd}$$(TXT).forEach(setIm);if(m==='sys')kbHide(false);if(el&&isTxt(el)&&!cc.classList.contains('show')){el.blur();el.focus({preventScroll:true});try{el.setSelectionRange(a,b)}catch(_){}}}
+kbEl.addEventListener('pointerdown',e=>{e.preventDefault();const b=e.target.closest('[data-k]');if(!b)return;b.classList.add('pr');const k=b.dataset.k;kkey(k);if(k==='⌫'){clearTimeout(K.rt);clearInterval(K.rp);K.rt=setTimeout(()=>{K.rp=setInterval(()=>kkey('⌫',1),60)},420)}});
+kbEl.addEventListener('mousedown',e=>e.preventDefault());
+kbEl.addEventListener('click',e=>{const h=e.target.closest('[data-kk]');if(!h)return;if(h.dataset.kk==='hide')kbHide();else kbMode('sys')});
+['pointerup','pointercancel'].forEach(t=>document.addEventListener(t,kbStop,true));
+document.addEventListener('pointerdown',e=>{if(isTxt(e.target))setIm(e.target)},true);
+document.addEventListener('focusin',e=>{const el=e.target;if(!isTxt(el))return;setIm(el);if(K.el!==el)el._v0=el.value;if(fishOn())kbShow(el)});
+document.addEventListener('focusout',()=>setTimeout(()=>{if(!isTxt(document.activeElement))kbHide(false)},60));
+if(window.ResizeObserver)new ResizeObserver(()=>{if(scr.classList.contains('kbon'))scr.style.setProperty('--kbh',kbEl.offsetHeight+'px')}).observe(kbEl);
+$$(TXT).forEach(setIm);
+SP.kbd=()=>`<div class="grp"><div class="row" data-kbm="fish"><span>青魚鍵盤</span>${fishOn()?'<em>✓ 使用中</em>':''}</div><div class="row" data-kbm="sys"><span>系統鍵盤</span>${fishOn()?'':'<em>✓ 使用中</em>'}</div></div><p class="cap">青魚鍵盤只有英文字母、數字與符號（＋ − × ÷ ＝ 等）。打字時可按鍵盤上方的「🌐 系統鍵盤」切換，也可以在控制中心切換。</p>`;
+$('#sc').addEventListener('click',e=>{const b=e.target.closest('[data-kbm]');if(b){kbMode(b.dataset.kbm);srender()}});
+/* ---------- 青魚照片 ---------- */
+let mdb=null,M=[],mem=false,pv=-1;const U2={};
+const mopen=()=>new Promise(r=>{try{const q=indexedDB.open('qene-media',1);q.onupgradeneeded=()=>q.result.createObjectStore('m',{keyPath:'id'});q.onsuccess=()=>{mdb=q.result;r()};q.onerror=q.onblocked=()=>{mem=true;r()}}catch(e){mem=true;r()}});
+const mtx=(mode,fn)=>new Promise(res=>{if(!mdb)return res(null);try{const t=mdb.transaction('m',mode),rq=fn(t.objectStore('m'));t.oncomplete=()=>res(rq&&rq.result!==undefined?rq.result:true);t.onerror=t.onabort=()=>res(null)}catch(e){res(null)}});
+const mready=mopen().then(()=>mtx('readonly',s=>s.getAll())).then(a=>{M=(a||[]).sort((x,y)=>y.ts-x.ts)});
+const mu=it=>U2[it.id]||(U2[it.id]=URL.createObjectURL(it.blob));
+function mClr(){M.forEach(it=>{try{URL.revokeObjectURL(U2[it.id])}catch(_){}});M=[];for(const k in U2)delete U2[k];mtx('readwrite',s=>s.clear())}
+async function picR(){await mready;$('#pg').innerHTML=M.length?`<p class="cap">共 ${M.length} 項</p><div class="pgr">${M.map((it,i)=>`<button class="pt" data-pi="${i}">${it.type==='video'?`<video src="${mu(it)}#t=0.1" muted playsinline preload="metadata"></video><b>▶</b>`:`<img src="${mu(it)}" alt="">`}</button>`).join('')}</div>${mem?'<p class="cap">此環境無法永久儲存，關閉頁面後內容會消失。</p>':''}`:'<div class="page" style="text-align:center;padding-top:70px"><svg width="56" height="56" style="color:var(--acc)"><use href="#fish"/></svg><h3 style="margin:12px 0 6px">還沒有照片或影片</h3><p class="mut">點右上角「＋ 加入」，從手機或電腦選擇。</p></div>'}
+function pvClose(){const v=$('#pv'),m=v.querySelector('video');if(m){m.pause();m.removeAttribute('src');m.load()}v.style.display='none';v.innerHTML='';pv=-1}
+function pvR(){const it=M[pv];if(!it)return pvClose();const b=$('#pv'),o=b.querySelector('video');if(o)o.pause();b.innerHTML=`<div id="pn"><button data-pv="x">完成</button><span><button data-pv="p" ${pv<1?'disabled':''}>‹</button>${pv+1} / ${M.length}<button data-pv="n" ${pv>=M.length-1?'disabled':''}>›</button></span><button data-pv="d" style="color:#d6453d">刪除</button></div><div id="pm">${it.type==='video'?`<video src="${mu(it)}" controls playsinline></video>`:`<img src="${mu(it)}" alt="${esc(it.name)}">`}</div>`;b.style.display='flex'}
+$('#pic').addEventListener('click',e=>{let b;if(b=e.target.closest('[data-pi]')){pv=+b.dataset.pi;pvR()}else if(b=e.target.closest('[data-pv]')){const a=b.dataset.pv;if(a==='x')pvClose();else if(a==='p'&&pv>0){pv--;pvR()}else if(a==='n'&&pv<M.length-1){pv++;pvR()}else if(a==='d'){const i=pv,it=M[i];if(!it)return;ask('刪除','確定要刪除這個項目嗎？','刪除',()=>{if(M[i]!==it)return;pvClose();try{URL.revokeObjectURL(U2[it.id])}catch(_){}delete U2[it.id];M.splice(i,1);mtx('readwrite',s=>s.delete(it.id));picR()})}}});
+$('#pf').addEventListener('change',async e=>{const fl=[...e.target.files];e.target.value='';if(!fl.length)return;await mready;let ok=0,bad=0,fail=0;for(const f of fl){const t=f.type.startsWith('video/')?'video':f.type.startsWith('image/')?'image':null;if(!t){bad++;continue}const it={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),type:t,name:f.name,ts:Date.now(),blob:f};M.unshift(it);ok++;if(!(await mtx('readwrite',s=>s.put(it))))fail++}picR();toast(fail?'已加入，但無法永久儲存':bad?'已加入 '+ok+' 項，'+bad+' 項格式不支援':'已加入 '+ok+' 項')});
+
+/* ---------- 展示模式 ---------- */
+const V={x:-8,y:0,vy:0},ov=$('#demoov');
+function demoOn(){if(R.busy||!R.on||!R.awake)return;if(!$('#slab')){const sb=document.createElement('div');sb.id='slab';for(let z=-20;z<=20;z+=2){const d=document.createElement('div');d.style.transform='translateZ('+z+'px)';sb.appendChild(d)}phone.insertBefore(sb,$('#back'))}resetToLock();R.demo=true;V.x=-8;V.y=0;V.vy=0;phone.classList.add('demo');ov.style.display='block';$('#demobar').style.display='flex';$('#demohint').style.display='block';fit()}
+function demoOff(){R.demo=false;V.vy=0;phone.classList.remove('demo','ease');ov.style.display='none';$('#demobar').style.display='none';$('#demohint').style.display='none';fit()}
+(()=>{let d=false,px=0,py=0;
+ov.addEventListener('pointerdown',e=>{phone.classList.remove('ease');d=true;px=e.clientX;py=e.clientY;V.vy=0;try{ov.setPointerCapture(e.pointerId)}catch(_){}});
+ov.addEventListener('pointermove',e=>{if(!d)return;const dx=e.clientX-px,dy=e.clientY-py;px=e.clientX;py=e.clientY;V.y+=dx*.6;V.x=Math.max(-60,Math.min(60,V.x-dy*.5));V.vy=dx*.6;fit()});
+const up=()=>{if(!d)return;d=false;const f=()=>{if(!R.demo||d||Math.abs(V.vy)<.05)return;V.y+=V.vy;V.vy*=.95;fit();requestAnimationFrame(f)};f()};
+ov.addEventListener('pointerup',up);ov.addEventListener('pointercancel',up)})();
+$('#demobar').addEventListener('click',e=>{const b=e.target.closest('[data-d3]');if(!b)return;const a=b.dataset.d3;if(a==='x')return demoOff();phone.classList.add('ease');V.vy=0;V.x=-8;V.y=a==='f'?Math.round(V.y/360)*360:Math.round((V.y-180)/360)*360+180;fit();setTimeout(()=>phone.classList.remove('ease'),700)});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&R.demo)demoOff()});
+$('#sc').addEventListener('click',e=>{if(e.target.closest('[data-act=demo]'))ask('展示模式','進入後只顯示鎖定畫面，可拖曳旋轉手機，轉到背面看鏡頭。','進入',demoOn)});
+
+/* ---------- 啟動 ---------- */
+applyAll();tick();srender();bshow();homeRender();strender();resetToLock();setTimeout(autoChk,4000);
+})();
+</script>
+<script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script>
+</body>
+</html>
