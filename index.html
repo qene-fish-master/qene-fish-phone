@@ -318,6 +318,10 @@ input[type=range]{width:100%;accent-color:var(--acc);touch-action:none;margin-to
 #demobar{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:21;display:none;gap:10px}
 #demobar button{padding:10px 18px;border-radius:20px;border:1px solid #fff5;background:#0c1d22cc;color:#fff;font-size:15px}
 #demohint{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;color:#9fc5c9;font-size:13px;z-index:21;display:none;pointer-events:none}
+#gm{overflow:hidden;touch-action:pan-x pan-y}
+#gf{flex:1;min-height:0;width:100%;border:0;margin-bottom:26px;background:var(--bg);touch-action:pan-x pan-y}
+#gmm{display:none;text-align:center;padding:90px 30px;color:var(--mut)}
+#gm .hd button[data-gm]{justify-self:end;background:none;border:0;color:var(--acc);font-size:16px;padding:6px 4px;font-weight:700}
 </style>
 </head>
 <body>
@@ -350,6 +354,7 @@ input[type=range]{width:100%;accent-color:var(--acc);touch-action:none;margin-to
 
   <div class="app" id="cam"><div class="hd"><button data-home>‹ 主畫面</button><span>相機</span><i></i></div><div style="flex:1;display:grid;place-items:center;text-align:center;padding:30px 40px 80px"><div><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="opacity:.6"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/><path d="M3 3l18 18"/></svg><h3 style="margin:14px 0 6px">沒有權限開啟相機</h3><p class="cap" style="margin:0">青魚手機尚未取得相機權限。</p></div></div></div>
   <div class="app" id="pic"><div class="hd"><button data-home>‹ 主畫面</button><span>青魚照片</span><label class="pl">＋ 加入<input id="pf" type="file" accept="image/*,video/*" multiple hidden></label></div><div class="scroll" id="pg"></div><div id="pv"></div></div>
+  <div class="app" id="gm"><div class="hd"><button data-home>‹ 主畫面</button><span>青魚遊戲</span><button data-gm="menu">遊戲選單</button></div><div id="gmm"><svg width="56" height="56" style="color:var(--acc)"><use href="#fish"/></svg><h3 style="margin:12px 0 6px">沒有網路連線</h3><p>請在控制中心開啟 Wi-Fi 或行動網路。</p></div><iframe id="gf" title="青魚遊戲" allow="autoplay; fullscreen"></iframe></div>
   <div class="app" id="st"><div class="hd"><button data-home>‹ 主畫面</button><span>Qene App Store</span><i></i></div><div class="scroll"><input class="inp" id="sq" placeholder="搜尋 App" enterkeyhint="search"><div class="grp" id="slist"></div><p class="cap">所有 App 皆為青魚自製示範，不會連到真實 App Store。</p></div></div>
   <div class="app" id="mini"><div class="hd"><button data-home>‹ 主畫面</button><span id="mtitle"></span><i></i></div><div class="scroll" id="mbody" style="padding:8px 16px 40px"></div></div>
   <div class="app" id="ph"><div class="hd"><button data-home>‹ 主畫面</button><span>電話</span><i></i></div><div class="seg" id="phtabs"><button data-pt="rec">最近</button><button data-pt="con">聯絡人</button><button data-pt="pad">鍵盤</button></div><div class="scroll" id="phb"></div><div id="call"></div></div>
@@ -444,11 +449,11 @@ const APPS=[
 const STORE=[
 {id:'calc',n:'青魚計算機',d:'簡潔的四則運算',g:'linear-gradient(145deg,#ff9a6b,#d8503f)',s:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2M14 12h2M8 16h2M14 16h2"/>'},
 {id:'sw',n:'潮汐碼表',d:'計時與分圈',g:'linear-gradient(145deg,#8a7bff,#4a3fb5)',s:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M10 3h4"/>'},
-{id:'tank',n:'青魚魚缸',d:'點一點餵魚',g:'linear-gradient(145deg,#37d9c5,#0b6a7f)',s:'<use href="#fish" stroke="none"/>'},
+{id:'gm',n:'青魚遊戲',d:'9 款小遊戲，離線也能玩',g:'linear-gradient(145deg,#3ed6c4,#0e5a66)',s:'<rect x="2.5" y="7" width="19" height="11" rx="5"/><path d="M7 10v5M4.5 12.5h5"/><circle cx="15.5" cy="11.5" r=".8"/><circle cx="18" cy="14" r=".8"/>'},
 {id:'wc',n:'世界時鐘',d:'查看各地現在時間',g:'linear-gradient(145deg,#f4c95d,#c9822b)',s:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'}];
 const LIB=()=>APPS.concat(STORE.filter(a=>S.inst.includes(a.id)));
 function homeRender(){const L=APPS.concat(S.addHome?STORE.filter(a=>S.inst.includes(a.id)):[]);home.innerHTML=L.map((a,i)=>`<button class="ic" data-app="${a.id}" style="--i:${i}"><u style="background:${a.g}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${a.s}</svg></u>${a.n}</button>`).join('')}
-function openById(id){if(id==='set')srender();else if(id==='br')bshow();else if(id==='st')strender();else if(id==='ms'){mview='list';mR()}else if(id==='ph'){pt='pad';num='';phR()}else if(id==='pic')picR();if(!showApp(id))return;if(id==='cam')camStart()}
+function openById(id){if(id==='set')srender();else if(id==='br')bshow();else if(id==='st')strender();else if(id==='ms'){mview='list';mR()}else if(id==='ph'){pt='pad';num='';phR()}else if(id==='pic')picR();if(!showApp(id))return;if(id==='cam')camStart();if(id==='gm')gmLoad()}
 function unlock(){if(R.demo)return;if(R.stage!=='lock'||!R.on||!R.awake)return;if(S.passOn){lock.style.transition='transform .3s,opacity .3s';lock.style.transform='';lock.style.opacity=1;passAsk('enter',doUnlock);return}doUnlock()}
 function doUnlock(){if(R.stage!=='lock')return;if(S.lockSnd)beep();lock.style.transition='transform .45s cubic-bezier(.3,.7,.2,1),opacity .45s';lock.style.transform='translateY(-100%)';lock.style.opacity=0;lock.style.pointerEvents='none';home.classList.remove('enter');void home.offsetWidth;home.classList.add('enter');R.stage='home';scr.dataset.s='home'}
 $('#ubtn').addEventListener('click',unlock);
@@ -462,7 +467,7 @@ b.addEventListener('pointerdown',e=>{sy=e.clientY;dy=0;try{b.setPointerCapture(e
 b.addEventListener('pointermove',e=>{if(sy!==null)dy=(e.clientY-sy)/R.sc});
 b.addEventListener('pointerup',()=>{if(sy===null)return;sy=null;if(!S.gSwipe)return;if(R.stage==='lock'){if(dy<-50)unlock()}else if(R.stage==='app'&&(dy<-20||Math.abs(dy)<8))goHome()});
 b.addEventListener('pointercancel',()=>{sy=null})})();
-function showApp(id){if(!R.on||!R.awake||R.stage==='lock')return false;if(S.limit&&id!=='set'&&totalUse()>=S.limit*60){toast('已達螢幕使用時間限額');return false}flush();if(id!=='cam')camStop();const el=STORE.some(a=>a.id===id)?'mini':id;$$('.app').forEach(a=>a.classList.toggle('open',a.id===el));R.stage='app';scr.dataset.s='app';R.cur=id;R.t0=Date.now();if(el==='mini')mini(id);return true}
+function showApp(id){if(!R.on||!R.awake||R.stage==='lock')return false;if(S.limit&&id!=='set'&&totalUse()>=S.limit*60){toast('已達螢幕使用時間限額');return false}flush();if(id!=='cam')camStop();const el=STORE.some(a=>a.id===id&&id!=='gm')?'mini':id;$$('.app').forEach(a=>a.classList.toggle('open',a.id===el));R.stage='app';scr.dataset.s='app';R.cur=id;R.t0=Date.now();if(el==='mini')mini(id);return true}
 function goHome(){flush();camStop();stopCall();passHide();$('#tabs').classList.remove('show');$$('.app').forEach(a=>a.classList.remove('open'));R.stage='home';scr.dataset.s='home';if(document.activeElement)document.activeElement.blur()}
 home.addEventListener('click',e=>{const b=e.target.closest('[data-app]');if(b){if(S.click)beep(S.tone*1.5);openById(b.dataset.app)}});
 document.addEventListener('click',e=>{if(e.target.closest('[data-home]'))goHome()});
@@ -553,7 +558,7 @@ const c=e.target.closest('[data-t]');if(c){br.cur=+c.dataset.t;$('#tabs').classL
 $('#ntx').value=S.note;$('#ntx').addEventListener('input',e=>{S.note=e.target.value;save()});
 
 /* ---------- 新增功能 ---------- */
-function flush(){kbHide();pvClose();if(R.cur){S.usage[R.cur]=(S.usage[R.cur]||0)+(Date.now()-R.t0)/1000;R.cur=null;save()}}
+function flush(){kbHide();pvClose();gmUnload();if(R.cur){S.usage[R.cur]=(S.usage[R.cur]||0)+(Date.now()-R.t0)/1000;R.cur=null;save()}}
 const useOf=id=>(S.usage[id]||0)+(R.cur===id?(Date.now()-R.t0)/1000:0);
 const totalUse=()=>APPS.concat(STORE).filter(a=>a.id!=='set').reduce((s,a)=>s+useOf(a.id),0);
 document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.rng;if(!k)return;const v=+e.target.value;if(k==='bright')S.bright=v/100;else S[k]=v;save();applyAll();if(k==='vol')beep(400+v*5)});
@@ -752,6 +757,13 @@ $('#demobar').addEventListener('click',e=>{const b=e.target.closest('[data-d3]')
 addEventListener('keydown',e=>{if(e.key==='Escape'&&R.demo)demoOff()});
 $('#sc').addEventListener('click',e=>{if(e.target.closest('[data-act=demo]'))ask('展示模式','進入後只顯示鎖定畫面，可拖曳旋轉手機，轉到背面看鏡頭。','進入',demoOn)});
 
+/* ---------- 青魚遊戲 ---------- */
+const GM='games/index.html',gf=$('#gf');
+function gmLoad(){$('#gmm').style.display='none';gf.style.display='block';gf.src=GM}
+addEventListener('message',e=>{const m=e.data;if(m&&m.qene==='notify'&&e.source===gf.contentWindow&&typeof m.t==='string')notify(m.t.slice(0,60),String(m.b==null?'':m.b).slice(0,120))});
+function gmUnload(){const a=gf.getAttribute('src');if(a&&a!=='about:blank')gf.src='about:blank'}
+$('#gm').addEventListener('click',e=>{if(e.target.closest('[data-gm=menu]')&&gf.style.display!=='none')gf.src=GM});
+S.inst=(S.inst||[]).filter(id=>STORE.some(a=>a.id===id));
 /* ---------- 啟動 ---------- */
 applyAll();tick();srender();bshow();homeRender();strender();resetToLock();setTimeout(autoChk,4000);
 })();
